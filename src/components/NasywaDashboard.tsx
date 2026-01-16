@@ -55,6 +55,8 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [currentHug, setCurrentHug] = useState<boolean>(false);
     const [currentKiss, setCurrentKiss] = useState<boolean>(false);
     const [currentMumma, setCurrentMumma] = useState<boolean>(false);
+    const [currentBabyBoy, setCurrentBabyBoy] = useState<boolean>(false);
+    const [currentBabyGirl, setCurrentBabyGirl] = useState<boolean>(false);
     const [isSecretMode, setIsSecretMode] = useState(false);
     const [secretUnlockTime, setSecretUnlockTime] = useState<string>("20:00");
     const [jarNotes, setJarNotes] = useState<any[]>([]);
@@ -367,6 +369,16 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             setTimeout(() => setCurrentMumma(false), 5000);
         });
 
+        channel.bind("babygirl", () => {
+            setCurrentBabyGirl(true);
+            setTimeout(() => setCurrentBabyGirl(false), 5000);
+        });
+
+        channel.bind("babyboy", () => {
+            setCurrentBabyBoy(true);
+            setTimeout(() => setCurrentBabyBoy(false), 5000);
+        });
+
         channel.bind("new-lovenote", (note: any) => {
             setLoveNotes(prev => [note, ...prev]);
         });
@@ -569,6 +581,20 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         });
     };
 
+    const sendBabyBoy = async () => {
+        const sorted = ["nasywa", activeChat].sort();
+        const chatKey = `${sorted[0]}-${sorted[1]}`;
+
+        setCurrentBabyBoy(true);
+        setTimeout(() => setCurrentBabyBoy(false), 5000);
+
+        await fetch("/api/chat/animation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chatKey, type: "babyboy" })
+        });
+    };
+
     const handleAddLoveNote = async (text: string) => {
         const res = await fetch("/api/lovenotes", {
             method: "POST",
@@ -636,6 +662,11 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         // Reset secret mode after sending
         if (isSecretMode) {
             setIsSecretMode(false);
+        }
+
+        // Trigger Baby Boy animation if keyword detected
+        if (text.toLowerCase().includes("baby boy") || text.toLowerCase().includes("babyboy")) {
+            sendBabyBoy();
         }
 
         // 2. Persist to message store INSTANTLY (without translation)
@@ -1539,7 +1570,69 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                 className="absolute inset-x-0 -bottom-20 text-center"
                             >
                                 <span className="text-4xl lg:text-6xl font-black text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] bg-black/30 px-8 py-4 rounded-3xl backdrop-blur-md">
-                                    Mumma... Please?
+                                    Mumma...
+                                </span>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {currentBabyGirl && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.5 }}
+                        className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
+                    >
+                        <div className="relative text-center">
+                            <motion.div
+                                animate={{
+                                    y: [0, -20, 0],
+                                    scale: [1, 1.1, 1],
+                                    rotate: [0, 5, -5, 0]
+                                }}
+                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                            >
+                                <span className="text-[150px] lg:text-[300px] leading-none drop-shadow-[0_0_50px_rgba(236,72,153,0.5)]">👸</span>
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 50 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute inset-x-0 -bottom-20 text-center"
+                            >
+                                <span className="text-4xl lg:text-6xl font-black text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] bg-black/30 px-8 py-4 rounded-3xl backdrop-blur-md">
+                                    Baby Girl... ❤️
+                                </span>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {currentBabyBoy && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.5 }}
+                        className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
+                    >
+                        <div className="relative text-center">
+                            <motion.div
+                                animate={{
+                                    y: [0, -20, 0],
+                                    scale: [1, 1.1, 1],
+                                    rotate: [0, -5, 5, 0]
+                                }}
+                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                            >
+                                <span className="text-[150px] lg:text-[300px] leading-none drop-shadow-[0_0_50px_rgba(59,130,246,0.5)]">👶</span>
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 50 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute inset-x-0 -bottom-20 text-center"
+                            >
+                                <span className="text-4xl lg:text-6xl font-black text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] bg-black/30 px-8 py-4 rounded-3xl backdrop-blur-md">
+                                    Baby Boy... 💙
                                 </span>
                             </motion.div>
                         </div>
