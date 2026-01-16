@@ -64,7 +64,7 @@ export async function getGeminiModel() {
     if (!apiKey) throw new Error("No Gemini API keys found in any source");
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 }
 
 export async function translateAndAnalyze(text: string, sourceLang: string, targetLang: string) {
