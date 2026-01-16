@@ -9,8 +9,8 @@ import confetti from "canvas-confetti";
 import { getPusherClient } from "@/lib/pusher";
 import InteractiveMap from "@/components/InteractiveMap";
 import StreakOverlay from "@/components/StreakOverlay";
-import MusicPlayer, { EffectType } from './MusicPlayer';
-import BackgroundEffects from './BackgroundEffects';
+import MusicPlayer from './MusicPlayer';
+import BackgroundEffects, { EffectType } from './BackgroundEffects';
 import SlideshowBackground from './SlideshowBackground';
 
 function cn(...inputs: ClassValue[]) {

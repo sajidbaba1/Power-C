@@ -6,7 +6,7 @@ import { Play, Pause, Volume2, VolumeX, SkipForward } from 'lucide-react';
 // Dynamic import for ReactPlayer to avoid SSR issues
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
 
-export type EffectType = "snow" | "hearts" | "rain" | "none";
+import { EffectType } from './BackgroundEffects';
 
 export interface Song {
     id: string;
@@ -27,7 +27,7 @@ const LOCAL_SONGS: Song[] = [
         id: "l2",
         title: "Oh Oh Jane Jaana",
         url: "/songs/jane_jaana.mp3",
-        effect: "hearts"
+        effect: "stars"
     },
     {
         id: "l3",
@@ -39,13 +39,13 @@ const LOCAL_SONGS: Song[] = [
         id: "l4",
         title: "Mere Mehboob Qayamat Hogi",
         url: "/songs/mere_mehboob.mp3",
-        effect: "hearts"
+        effect: "butterflies"
     },
     {
         id: "l5",
         title: "Tujhe Sochta Hoon",
         url: "/songs/tujhe_sochta.mp3",
-        effect: "rain"
+        effect: "sparkles"
     }
 ];
 
