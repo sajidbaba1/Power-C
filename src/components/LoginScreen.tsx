@@ -26,7 +26,7 @@ export default function LoginScreen({ onLogin }: LoginProps) {
         }
 
         const passwords: Record<string, string> = {
-            sajid: "sajid123",
+            sajid: "sajid20025",
             nasywa: "nasywa123",
             admin: "admin20025"
         };

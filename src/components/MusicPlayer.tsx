@@ -65,6 +65,7 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
     const [hasInteracted, setHasInteracted] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [volume, setVolume] = useState(1);
+    const [manualEffect, setManualEffect] = useState<EffectType | null>(null);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => setMounted(true), []);
@@ -92,12 +93,23 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
         const channel = pusherClient.subscribe(chatKey);
         channel.bind("music-update", (data: any) => {
             console.log("🎵 Remote Music Update:", data);
-            if (data.index !== undefined) setCurrentIndex(data.index);
+            if (data.index !== undefined) {
+                setCurrentIndex(data.index);
+                // Reset manual effect on remote song change?
+                // No, let admin keep control until they explicitly change it.
+            }
             if (data.isPlaying !== undefined) {
                 setIsPlaying(data.isPlaying);
                 if (data.isPlaying) setHasInteracted(true);
             }
-            if (data.effect !== undefined) onEffectChange(data.effect as EffectType);
+            if (data.effect !== undefined) {
+                if (data.effect === 'auto') {
+                    setManualEffect(null);
+                } else {
+                    setManualEffect(data.effect as EffectType);
+                    onEffectChange(data.effect as EffectType);
+                }
+            }
 
             // Handle individual volume control from Admin
             if (userRole === 'sajid' && data.sajidVolume !== undefined) setVolume(data.sajidVolume);
@@ -107,16 +119,20 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
         return () => channel.unbind("music-update");
     }, [pusherClient, activeChat, onEffectChange, userRole]);
 
-    // Apply Effect when song changes
+    // Apply Effect when song changes - ONLY if no manual override
     useEffect(() => {
         const song = playlist[currentIndex];
-        if (song && isPlaying) {
+        if (song && isPlaying && !manualEffect) {
             onEffectChange(song.effect);
         }
-    }, [currentIndex, isPlaying, playlist, onEffectChange]);
+    }, [currentIndex, isPlaying, playlist, onEffectChange, manualEffect]);
 
-    const broadcastState = async (updates: Partial<{ index: number, isPlaying: boolean }>) => {
-        if (updates.index !== undefined) setCurrentIndex(updates.index);
+    const broadcastState = async (updates: Partial<{ index: number, isPlaying: boolean, effect?: string }>) => {
+        if (updates.index !== undefined) {
+            setCurrentIndex(updates.index);
+            // When user manually skip, we reset manual effect to the new song's effect
+            setManualEffect(null);
+        }
         if (updates.isPlaying !== undefined) setIsPlaying(updates.isPlaying);
 
         const sorted = ["sajid", "nasywa"].sort();
@@ -129,6 +145,7 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                 chatKey,
                 index: updates.index !== undefined ? updates.index : currentIndex,
                 isPlaying: updates.isPlaying !== undefined ? updates.isPlaying : isPlaying,
+                effect: updates.effect || (updates.index !== undefined ? playlist[updates.index].effect : undefined),
                 playlist: []
             })
         });
@@ -185,13 +202,16 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
 
             <div className="fixed bottom-24 left-4 z-[9999]">
                 {!isPlaying ? (
-                    <button
-                        onClick={handleStart}
-                        className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-bounce flex items-center gap-2 transition-all"
-                    >
-                        <Play className="w-5 h-5 fill-current" />
-                        Start Vibes 🎵
-                    </button>
+                    // Only Admin can "Start Vibes" from scratch
+                    userRole === 'admin' ? (
+                        <button
+                            onClick={handleStart}
+                            className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-bounce flex items-center gap-2 transition-all"
+                        >
+                            <Play className="w-5 h-5 fill-current" />
+                            Start Vibes 🎵
+                        </button>
+                    ) : null
                 ) : (
                     <div className="flex items-center gap-2 bg-zinc-900/90 border border-pink-500/30 backdrop-blur-md p-2 rounded-full shadow-2xl hover:scale-105 transition-all">
                         <div className="px-2 max-w-[150px] truncate text-xs text-white font-medium">
@@ -200,6 +220,7 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                         <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-white/80 hover:text-white">
                             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                         </button>
+                        {/* Only Admin or owner can skip? Keeping skip for now as it's useful */}
                         <button onClick={handleNext} className="p-2 text-white/80 hover:text-white">
                             <SkipForward className="w-4 h-4 fill-current" />
                         </button>

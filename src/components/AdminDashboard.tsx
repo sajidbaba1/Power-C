@@ -23,7 +23,8 @@ import {
     Sparkles,
     CloudSnow,
     CloudRain,
-    Zap
+    Zap,
+    Music
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -46,7 +47,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     const [loginHistory, setLoginHistory] = useState<any[]>([]);
     const [vibeSettings, setVibeSettings] = useState({
         isPlaying: false,
-        effect: "none",
+        effect: "auto",
         sajidVolume: 100,
         nasywaVolume: 100
     });
@@ -130,13 +131,19 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         const sorted = ["sajid", "nasywa"].sort();
         const chatKey = sorted.join('-');
 
+        const fullData = {
+            ...vibeSettings,
+            ...updates,
+            chatKey,
+            // Convert 0-100 to 0-1 for the player
+            sajidVolume: (updates.sajidVolume !== undefined ? updates.sajidVolume : vibeSettings.sajidVolume) / 100,
+            nasywaVolume: (updates.nasywaVolume !== undefined ? updates.nasywaVolume : vibeSettings.nasywaVolume) / 100
+        };
+
         await fetch("/api/chat/music", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                chatKey,
-                ...updates
-            })
+            body: JSON.stringify(fullData)
         });
     };
 
@@ -156,7 +163,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     };
 
     const handleSetVolume = (target: 'sajid' | 'nasywa', volume: number) => {
-        broadcastMusic({ [`${target}Volume`]: volume / 100 });
+        broadcastMusic({ [`${target}Volume`]: volume });
         setVibeSettings(prev => ({ ...prev, [`${target}Volume`]: volume }));
     };
 
@@ -637,6 +644,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                                     </h2>
                                     <div className="grid grid-cols-2 gap-3">
                                         {[
+                                            { id: "auto", label: "Default Vibes", icon: Music },
                                             { id: "none", label: "Clear Sky", icon: X },
                                             { id: "hearts", label: "Love Rain", icon: Heart },
                                             { id: "snow", label: "Winter Magic", icon: CloudSnow },
