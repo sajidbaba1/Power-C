@@ -153,7 +153,7 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
             </div>
 
             {/* UI: Simple "Start" Button or Minimal Controls */}
-            <div className="fixed bottom-4 left-4 z-[50]">
+            <div className="fixed bottom-24 left-4 z-[9999]">
                 {!hasInteracted || !isPlaying ? (
                     <button
                         onClick={handleStart}
@@ -164,7 +164,7 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                     </button>
                 ) : (
                     // Minimal controls when playing
-                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/10 hover:bg-black/60 transition-colors">
+                    <div className="flex items-center gap-2 bg-zinc-900/90 border border-pink-500/30 backdrop-blur-md p-2 rounded-full shadow-2xl hover:scale-105 transition-all">
                         <div className="px-2 max-w-[150px] truncate text-xs text-white font-medium">
                             {playlist[currentIndex]?.title}
                         </div>
