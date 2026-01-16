@@ -51,7 +51,7 @@ export async function getGeminiModel() {
     if (!apiKey) throw new Error("No Gemini API keys found");
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use stable model names: gemini-1.5-flash or gemini-1.5-pro or gemini-2.0-flash
+    // Use stable model names: gemini-2.5-flash or gemini-2.5-pro or gemini-2.0-flash
     return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 }
 
