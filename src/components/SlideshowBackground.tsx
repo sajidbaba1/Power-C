@@ -2,13 +2,16 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// User should create public/slideshow folder and add images named 1.jpg, 2.jpg...
+// User images from public/slideshow
 const IMAGES = [
     "/slideshow/1.jpg",
     "/slideshow/2.jpg",
     "/slideshow/3.jpg",
     "/slideshow/4.jpg",
-    "/slideshow/5.jpg"
+    "/slideshow/5.jpg",
+    "/slideshow/6.jpg",
+    "/slideshow/7.jpg",
+    "/slideshow/8.jpg"
 ];
 
 export default function SlideshowBackground({ isPlaying }: { isPlaying: boolean }) {

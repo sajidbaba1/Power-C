@@ -303,24 +303,27 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                                             <span className="text-[10px] uppercase font-bold text-muted-foreground">Results</span>
                                             <button onClick={() => setSearchResults([])}><X className="w-3 h-3 text-white/50 hover:text-white" /></button>
                                         </div>
-                                        {searchResults.map((video) => (
-                                            <div
-                                                key={video.id.videoId}
-                                                className="flex items-center gap-2 p-2 hover:bg-white/10 border-b border-white/5 last:border-0"
-                                            >
-                                                <img src={video.snippet.thumbnails?.default?.url} className="w-10 h-8 object-cover rounded" />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-xs text-white font-medium truncate">{video.snippet.title}</div>
-                                                </div>
-                                                <button
-                                                    onClick={() => playSearchResult(video)}
-                                                    className="p-1.5 bg-pink-500/20 text-pink-400 hover:bg-pink-500 hover:text-white rounded-full transition-colors"
-                                                    title="Play Now"
+                                        {searchResults.map((video) => {
+                                            if (!video.snippet) return null;
+                                            return (
+                                                <div
+                                                    key={video.id?.videoId || Math.random()}
+                                                    className="flex items-center gap-2 p-2 hover:bg-white/10 border-b border-white/5 last:border-0"
                                                 >
-                                                    <Play className="w-3 h-3 fill-current" />
-                                                </button>
-                                            </div>
-                                        ))}
+                                                    <img src={video.snippet.thumbnails?.default?.url} className="w-10 h-8 object-cover rounded" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs text-white font-medium truncate">{video.snippet.title}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => playSearchResult(video)}
+                                                        className="p-1.5 bg-pink-500/20 text-pink-400 hover:bg-pink-500 hover:text-white rounded-full transition-colors"
+                                                        title="Play Now"
+                                                    >
+                                                        <Play className="w-3 h-3 fill-current" />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
