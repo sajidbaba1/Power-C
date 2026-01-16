@@ -591,14 +591,16 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         const text = textOverride || inputValue;
         if (!text.trim()) return;
 
-        const userMessage = {
+        const userMessage: any = {
             id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             text: text,
             sender: "nasywa",
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             status: "sending",
             isSticker: isSticker,
-            isHeart: text === "❤️" || text === "💖"
+            isHeart: text === "❤️" || text === "💖",
+            type: isSecretMode ? "secret" : "normal",
+            unlockAt: isSecretMode ? secretUnlockTime : null
         };
 
         setMessages((prev) => ({
@@ -608,6 +610,11 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         setInputValue("");
         if (textareaRef.current) {
             textareaRef.current.style.height = '40px';
+        }
+
+        // Reset secret mode after sending
+        if (isSecretMode) {
+            setIsSecretMode(false);
         }
 
         // 2. Persist to message store INSTANTLY (without translation)
@@ -1009,6 +1016,38 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                             </motion.div>
                         )}
 
+                        {/* Secret Mode Status Bar */}
+                        <AnimatePresence>
+                            {isSecretMode && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="glass border border-amber-500/30 rounded-2xl p-3 mb-2 flex items-center justify-between gap-4 bg-amber-500/5"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Lock className="w-4 h-4 text-amber-500" />
+                                        <span className="text-xs font-bold text-amber-500 uppercase tracking-wider">Secret Message Mode</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] text-muted-foreground">Opens at:</span>
+                                        <input
+                                            type="time"
+                                            value={secretUnlockTime}
+                                            onChange={(e) => setSecretUnlockTime(e.target.value)}
+                                            className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-1.5 text-sm font-bold text-amber-500 outline-none focus:ring-2 focus:ring-amber-500/50"
+                                        />
+                                        <button
+                                            onClick={() => setIsSecretMode(false)}
+                                            className="p-1.5 hover:bg-amber-500/20 rounded-lg transition-colors"
+                                        >
+                                            <X className="w-4 h-4 text-amber-500" />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                         <div className="glass border border-white/10 rounded-2xl p-2 flex items-end gap-2">
                             <input
                                 type="file"
@@ -1057,6 +1096,16 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                                 className="p-2 hover:bg-pink-500/10 rounded-xl transition-colors shrink-0 group"
                                             >
                                                 <Flame className="w-5 h-5 text-pink-500 transition-transform" />
+                                            </button>
+                                            <button
+                                                onClick={() => setIsSecretMode(!isSecretMode)}
+                                                className={cn(
+                                                    "p-2 rounded-xl transition-colors shrink-0",
+                                                    isSecretMode ? "bg-amber-500/20 text-amber-500" : "hover:bg-amber-500/10 text-muted-foreground"
+                                                )}
+                                                title="Secret Message Mode"
+                                            >
+                                                {isSecretMode ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
                                             </button>
                                         </div>
 
