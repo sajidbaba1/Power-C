@@ -32,11 +32,7 @@ export const getPrisma = (): PrismaClient => {
     // Direct connection with config object
     try {
         prisma = new PrismaClient({
-            datasources: {
-                db: {
-                    url: url,
-                },
-            },
+            datasourceUrl: url,
         });
         return prisma;
     } catch (e) {
