@@ -198,8 +198,8 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                     </button>
                 )}
 
-                {/* Hidden React Player */}
-                <div className="hidden">
+                {/* Hidden React Player (Use opacity-0 instead of display:none to allow audio) */}
+                <div className="fixed bottom-0 right-0 w-px h-px opacity-0 overflow-hidden pointer-events-none">
                     <ReactPlayer
                         url={playlist[currentIndex]?.url}
                         playing={isPlaying}
