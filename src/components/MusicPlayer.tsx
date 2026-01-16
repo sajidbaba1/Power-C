@@ -1,8 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Music, Play, Pause, SkipForward, Trash2, Volume2, Minimize2, Search, PlusCircle, X, Loader2, Shuffle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, Volume2, VolumeX, SkipForward } from 'lucide-react';
 
 // Dynamic import for ReactPlayer to avoid SSR issues
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
@@ -16,16 +15,17 @@ export interface Song {
     effect: EffectType;
 }
 
+// Fixed local playlist with simplified filenames
 const LOCAL_SONGS: Song[] = [
     {
         id: "l1",
-        title: "Saiyaara Reprise (Slowed)",
+        title: "Saiyaara Reprise",
         url: "/songs/saiyaara.mp3",
         effect: "snow"
     },
     {
         id: "l2",
-        title: "Oh Oh Jane Jaana (Slowed)",
+        title: "Oh Oh Jane Jaana",
         url: "/songs/jane_jaana.mp3",
         effect: "hearts"
     },
@@ -43,7 +43,7 @@ const LOCAL_SONGS: Song[] = [
     },
     {
         id: "l5",
-        title: "Tujhe Sochta Hoon (Rain)",
+        title: "Tujhe Sochta Hoon",
         url: "/songs/tujhe_sochta.mp3",
         effect: "rain"
     }
@@ -61,112 +61,49 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
     const [playlist, setPlaylist] = useState<Song[]>(LOCAL_SONGS);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [volume, setVolume] = useState(0.5);
-    const [mounted, setMounted] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
-
-    // Search State
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<any[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => setMounted(true), []);
 
-    // Interaction Listener
+    // Shuffle playlist on mount
     useEffect(() => {
-        const handleInteraction = () => setHasInteracted(true);
-        window.addEventListener('click', handleInteraction);
-        window.addEventListener('keydown', handleInteraction);
-        return () => {
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('keydown', handleInteraction);
-        };
+        setPlaylist([...LOCAL_SONGS].sort(() => Math.random() - 0.5));
     }, []);
 
-    // Notify parent
-    useEffect(() => {
-        if (onPlayingChange) onPlayingChange(isPlaying);
-    }, [isPlaying, onPlayingChange]);
-
-    // Shuffle on Mount (Client-side)
-    useEffect(() => {
-        // Only shuffle if we are using the default local list (prevent shuffling active shared sessions randomly)
-        // Actually, let's just shuffle the LOCAL_SONGS initially
-        const shuffled = [...LOCAL_SONGS].sort(() => Math.random() - 0.5);
-        // We only set this if we haven't loaded a playlist from DB yet? 
-        // For now, let's just set it. 
-        setPlaylist(shuffled);
-    }, []);
-
-    // Sync state via Pusher & Fetch Data
+    // Sync via Pusher
     useEffect(() => {
         if (!pusherClient || !activeChat) return;
 
-        let chatKey = "";
+        let chatKey = activeChat;
         if (activeChat.includes("nasywa") || activeChat.includes("sajid")) {
             const sorted = ["sajid", "nasywa"].sort();
             chatKey = `${sorted[0]}-${sorted[1]}`;
-        } else {
-            chatKey = activeChat;
         }
 
-        // Fetch persisted playlist
-        fetch(`/api/chat/music?chatKey=${chatKey}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.playlist && data.playlist.length > 0) {
-                    // Migration: Check for old default songs (ids 1-5) and replace with Local Songs
-                    const hasOldSongs = data.playlist.some((s: Song) => ["1", "2", "3", "4", "5"].includes(s.id));
-
-                    if (hasOldSongs) {
-                        console.log("Migrating to Local Playlist...");
-                        const shuffled = [...LOCAL_SONGS].sort(() => Math.random() - 0.5);
-                        setPlaylist(shuffled);
-                        // Save this new list to DB immediately
-                        // We can't use broadcastState here easily due to closure/scope, so we restart cleaner
-                        // Actually, we can just let the state settle and user interaction will save it, 
-                        // or explicit call:
-                        fetch("/api/chat/music", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                chatKey,
-                                playlist: shuffled,
-                                index: 0,
-                                isPlaying: false
-                            })
-                        });
-                    } else {
-                        setPlaylist(data.playlist);
-                    }
-                }
-            })
-            .catch(e => console.error("Failed to load playlist", e));
-
         const channel = pusherClient.subscribe(chatKey);
-
         channel.bind("music-update", (data: any) => {
-            if (data.playlist !== undefined) setPlaylist(data.playlist);
-            if (data.index !== undefined && data.index !== currentIndex) setCurrentIndex(data.index);
-            if (data.isPlaying !== undefined && data.isPlaying !== isPlaying) setIsPlaying(data.isPlaying);
+            if (data.index !== undefined) setCurrentIndex(data.index);
+            if (data.isPlaying !== undefined) setIsPlaying(data.isPlaying);
+            // We ignore playlist updates from remote to force local files for stability
         });
 
-        return () => channel.unbind("music-update");
-    }, [pusherClient, activeChat, currentIndex, isPlaying]);
+        // Also broadcast initial generic "I am here" to sync state? 
+        // No, keep it simple.
 
-    // Update effect
+        return () => channel.unbind("music-update");
+    }, [pusherClient, activeChat]);
+
+    // Apply Effect when song changes
     useEffect(() => {
         const song = playlist[currentIndex];
         if (song && isPlaying) {
-            if (currentEffect !== song.effect) {
-                onEffectChange(song.effect);
-            }
+            onEffectChange(song.effect);
         }
-    }, [currentIndex, isPlaying, playlist, onEffectChange, currentEffect]);
+    }, [currentIndex, isPlaying, playlist, onEffectChange]);
 
-    const broadcastState = async (updates: Partial<{ playlist: Song[], index: number, isPlaying: boolean }>) => {
-        if (updates.playlist !== undefined) setPlaylist(updates.playlist);
+    const broadcastState = async (updates: Partial<{ index: number, isPlaying: boolean }>) => {
         if (updates.index !== undefined) setCurrentIndex(updates.index);
         if (updates.isPlaying !== undefined) setIsPlaying(updates.isPlaying);
 
@@ -178,213 +115,67 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 chatKey,
-                playlist: updates.playlist !== undefined ? updates.playlist : playlist,
                 index: updates.index !== undefined ? updates.index : currentIndex,
-                isPlaying: updates.isPlaying !== undefined ? updates.isPlaying : isPlaying
+                isPlaying: updates.isPlaying !== undefined ? updates.isPlaying : isPlaying,
+                playlist: [] // Don't send the full playlist to save bandwidth/conflicts
             })
         });
     };
 
-    const handlePlayPause = () => {
-        broadcastState({ isPlaying: !isPlaying });
+    const handleStart = () => {
+        setHasInteracted(true);
+        broadcastState({ isPlaying: true });
     };
 
     const handleNext = () => {
-        if (playlist.length === 0) return;
         const nextIndex = (currentIndex + 1) % playlist.length;
         broadcastState({ index: nextIndex });
-    };
-
-    const handleDelete = (id: string) => {
-        const newPlaylist = playlist.filter(s => s.id !== id);
-        let newIndex = currentIndex;
-        if (currentIndex >= newPlaylist.length) newIndex = Math.max(0, newPlaylist.length - 1);
-        broadcastState({ playlist: newPlaylist, index: newIndex });
-    };
-
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
-        setIsSearching(true);
-        try {
-            const res = await fetch(`/api/youtube?query=${encodeURIComponent(searchQuery)}`);
-            const data = await res.json();
-            if (data.items) {
-                setSearchResults(data.items);
-            }
-        } catch (error) {
-            console.error("Search failed", error);
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    const playSearchResult = (video: any) => {
-        const newSong: Song = {
-            id: Date.now().toString(),
-            url: video.url || `https://www.youtube.com/watch?v=${video.id}`,
-            title: video.title || video.snippet?.title || "Unknown Song",
-            effect: "hearts"
-        };
-
-        const newPlaylist = [...playlist, newSong];
-        const newIndex = newPlaylist.length - 1;
-
-        setSearchQuery("");
-        setSearchResults([]);
-
-        broadcastState({
-            playlist: newPlaylist,
-            index: newIndex,
-            isPlaying: true
-        });
-        setHasInteracted(true);
     };
 
     if (!mounted) return null;
 
     return (
         <>
-            <div className="fixed bottom-4 left-4 z-[300]">
-                {!isExpanded && (
+            {/* Invisible Player */}
+            <div className="fixed bottom-0 right-0 w-px h-px overflow-hidden opacity-0 pointer-events-none">
+                <ReactPlayer
+                    url={playlist[currentIndex]?.url}
+                    playing={isPlaying && hasInteracted}
+                    volume={isMuted ? 0 : 0.8}
+                    muted={false}
+                    onEnded={handleNext}
+                    width="1px"
+                    height="1px"
+                    playsinline={true}
+                    onError={(e: any) => console.log("Audio Error:", e)}
+                    config={{ file: { forceAudio: true } }}
+                />
+            </div>
+
+            {/* UI: Simple "Start" Button or Minimal Controls */}
+            <div className="fixed bottom-4 left-4 z-[50]">
+                {!hasInteracted || !isPlaying ? (
                     <button
-                        onClick={() => setIsExpanded(true)}
-                        className={`p-3 rounded-full shadow-xl transition-all ${isPlaying ? 'bg-pink-500 animate-pulse' : 'bg-white/10 glass border border-white/20'}`}
+                        onClick={handleStart}
+                        className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-bounce flex items-center gap-2 transition-all"
                     >
-                        <Music className={`w-6 h-6 ${isPlaying ? 'text-white' : 'text-pink-400'}`} />
+                        <Play className="w-5 h-5 fill-current" />
+                        Start Vibes 🎵
                     </button>
-                )}
-
-                <div className="fixed bottom-0 right-0 w-px h-px overflow-hidden z-[9999]">
-                    <ReactPlayer
-                        url={playlist[currentIndex]?.url}
-                        playing={isPlaying && hasInteracted}
-                        volume={volume}
-                        muted={false}
-                        onEnded={handleNext}
-                        width="1px"
-                        height="1px"
-                        playsinline={true}
-                        // Remove YouTube config for local files, or keep generic
-                        config={{
-                            file: { forceAudio: true }
-                        }}
-                    />
-                </div>
-
-                {isPlaying && !hasInteracted && (
-                    <div className="fixed bottom-20 left-4 z-[300] bg-pink-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce cursor-pointer flex items-center gap-2 font-bold text-xs" onClick={() => setHasInteracted(true)}>
-                        <Play className="w-3 h-3 fill-current" /> Tap to Join Music 🎵
+                ) : (
+                    // Minimal controls when playing
+                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/10 hover:bg-black/60 transition-colors">
+                        <div className="px-2 max-w-[150px] truncate text-xs text-white font-medium">
+                            {playlist[currentIndex]?.title}
+                        </div>
+                        <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-white/80 hover:text-white">
+                            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                        </button>
+                        <button onClick={handleNext} className="p-2 text-white/80 hover:text-white">
+                            <SkipForward className="w-4 h-4 fill-current" />
+                        </button>
                     </div>
                 )}
-
-                <AnimatePresence>
-                    {isExpanded && (
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                            className="bg-black/80 glass border border-white/10 backdrop-blur-xl rounded-3xl p-4 w-[350px] shadow-2xl relative"
-                        >
-                            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-                                <div className="flex items-center gap-2">
-                                    <Music className="w-5 h-5 text-pink-400" />
-                                    <span className="font-bold text-white text-sm">Vibe Player</span>
-                                </div>
-                                <button onClick={() => setIsExpanded(false)}>
-                                    <Minimize2 className="w-4 h-4 text-white/50 hover:text-white" />
-                                </button>
-                            </div>
-
-                            {playlist.length > 0 ? (
-                                <div className="mb-4 text-center">
-                                    <div className="text-white font-bold truncate">{playlist[currentIndex]?.title}</div>
-                                    <div className="text-xs text-pink-400 capitalize">Vibe: {playlist[currentIndex]?.effect || 'None'}</div>
-
-                                    <div className="flex items-center justify-center gap-4 mt-3">
-                                        <button onClick={handlePlayPause} className="p-2 bg-white/10 rounded-full hover:bg-white/20">
-                                            {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white" />}
-                                        </button>
-                                        <button onClick={handleNext} className="p-2 bg-white/10 rounded-full hover:bg-white/20">
-                                            <SkipForward className="w-5 h-5 text-white" />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 mt-3">
-                                        <Volume2 className="w-4 h-4 text-white/50" />
-                                        <input
-                                            type="range"
-                                            min="0" max="1" step="0.1"
-                                            value={volume}
-                                            onChange={(e) => setVolume(parseFloat(e.target.value))}
-                                            className="w-full accent-pink-500 h-1"
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-white/50 text-center py-4 text-sm">No songs in playlist</div>
-                            )}
-
-                            <div className="mt-4 pt-4 border-t border-white/10 relative">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Search song to play..."
-                                        className="flex-1 bg-white/10 text-xs text-white p-2 rounded-lg outline-none focus:ring-1 focus:ring-pink-500"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                    />
-                                    <button onClick={handleSearch} disabled={isSearching} className="p-2 bg-pink-500 rounded-lg text-white">
-                                        {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                                    </button>
-                                </div>
-
-                                {searchResults.length > 0 && (
-                                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 max-h-[250px] overflow-y-auto">
-                                        <div className="flex items-center justify-between p-2 bg-black/50 border-b border-white/5">
-                                            <span className="text-[10px] uppercase font-bold text-muted-foreground">Results</span>
-                                            <button onClick={() => setSearchResults([])}><X className="w-3 h-3 text-white/50 hover:text-white" /></button>
-                                        </div>
-                                        {searchResults.map((video) => (
-                                            <div
-                                                key={video.id}
-                                                className="flex items-center gap-2 p-2 hover:bg-white/10 border-b border-white/5 last:border-0"
-                                            >
-                                                <img src={video.thumbnails?.default?.url} className="w-10 h-8 object-cover rounded" />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-xs text-white font-medium truncate">{video.title}</div>
-                                                </div>
-                                                <button
-                                                    onClick={() => playSearchResult(video)}
-                                                    className="p-1.5 bg-pink-500/20 text-pink-400 hover:bg-pink-500 hover:text-white rounded-full transition-colors"
-                                                    title="Play Now"
-                                                >
-                                                    <Play className="w-3 h-3 fill-current" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-white/10">
-                                <div className="text-xs font-bold text-white mb-2 ml-1">Up Next</div>
-                                <div className="max-h-[150px] overflow-y-auto space-y-1">
-                                    {playlist.map((s, i) => (
-                                        <div key={s.id} className={`flex items-center justify-between text-xs p-1.5 rounded ${i === currentIndex ? 'bg-pink-500/20 text-pink-300' : 'text-white/70 hover:bg-white/5'}`}>
-                                            <div onClick={() => { setCurrentIndex(i); broadcastState({ index: i }); }} className="cursor-pointer truncate max-w-[200px]">
-                                                {s.title}
-                                            </div>
-                                            <button onClick={() => handleDelete(s.id)}>
-                                                <Trash2 className="w-3 h-3 hover:text-red-400" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </div>
         </>
     );
