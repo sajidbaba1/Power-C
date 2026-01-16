@@ -38,6 +38,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [showMoreActions, setShowMoreActions] = useState(false);
     const [fireworkText, setFireworkText] = useState<string | null>(null);
     const lastFireworkId = useRef<string | null>(null);
     const [isOtherTyping, setIsOtherTyping] = useState(false);
@@ -45,6 +46,19 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const isTypingRef = useRef(false);
     const [showRocket, setShowRocket] = useState(false);
     const [chatWallpaper, setChatWallpaper] = useState<string | null>(null);
+    const [showLoveWall, setShowLoveWall] = useState(false);
+    const [showMilestones, setShowMilestones] = useState(false);
+    const [loveNotes, setLoveNotes] = useState<any[]>([]);
+    const [milestones, setMilestones] = useState<any[]>([]);
+    const [currentHug, setCurrentHug] = useState<boolean>(false);
+    const [currentKiss, setCurrentKiss] = useState<boolean>(false);
+    const [isSecretMode, setIsSecretMode] = useState(false);
+    const [secretUnlockTime, setSecretUnlockTime] = useState<string>("20:00");
+    const [jarNotes, setJarNotes] = useState<any[]>([]);
+    const [showJar, setShowJar] = useState(false);
+    const [showMap, setShowMap] = useState(false);
+    const [distance, setDistance] = useState<number | null>(null);
+    const [showGratitudePrompt, setShowGratitudePrompt] = useState(false);
 
     const isUnlocked = (msg: any) => {
         if (msg.type !== "secret" || msg.sender === "nasywa") return true;
@@ -57,15 +71,6 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
 
         return now >= unlockTime;
     };
-    const [loveNotes, setLoveNotes] = useState<any[]>([]);
-    const [milestones, setMilestones] = useState<any[]>([]);
-    const [showLoveWall, setShowLoveWall] = useState(false);
-    const [showMilestones, setShowMilestones] = useState(false);
-    const [currentHug, setCurrentHug] = useState<boolean>(false);
-    const [currentKiss, setCurrentKiss] = useState<boolean>(false);
-    const [unlockTimer, setUnlockTimer] = useState<Record<string, string>>({});
-    const [isSecretMode, setIsSecretMode] = useState(false);
-    const [secretUnlockTime, setSecretUnlockTime] = useState<string>("20:00");
 
     useEffect(() => {
         const savedWallpaper = localStorage.getItem(`chatWallpaper_nasywa_${activeChat}`);
@@ -571,6 +576,16 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         setMilestones(prev => [...prev, milestone].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
     };
 
+    const handleAddJarNote = async (content: string) => {
+        const res = await fetch("/api/jar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content, author: "nasywa" })
+        });
+        const note = await res.json();
+        setJarNotes(prev => [note, ...prev]);
+    };
+
     const handleSend = async (textOverride?: string, isSticker = false) => {
         const text = textOverride || inputValue;
         if (!text.trim()) return;
@@ -735,22 +750,46 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         ))}
                     </div>
 
-                    <div className="flex gap-2 mt-4">
+                    <div className="grid grid-cols-2 gap-2 mt-2">
                         <button
                             onClick={() => setShowLoveWall(true)}
-                            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-xl py-2.5 text-xs font-bold shadow-lg shadow-pink-500/20 hover:scale-[1.02] transition-all"
+                            className="flex items-center justify-center gap-2 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-xl py-2.5 text-[10px] font-black uppercase tracking-wider shadow-lg shadow-pink-500/20 hover:scale-[1.02] transition-all"
                         >
-                            <Layout className="w-3.5 h-3.5" />
-                            Love Wall
+                            <Layout className="w-3 h-3" />
+                            Wall
                         </button>
                         <button
                             onClick={() => setShowMilestones(true)}
-                            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-br from-indigo-500 to-purple-500 text-white rounded-xl py-2.5 text-xs font-bold shadow-lg shadow-indigo-500/20 hover:scale-[1.02] transition-all"
+                            className="flex items-center justify-center gap-2 bg-gradient-to-br from-indigo-500 to-purple-500 text-white rounded-xl py-2.5 text-[10px] font-black uppercase tracking-wider shadow-lg shadow-indigo-500/20 hover:scale-[1.02] transition-all"
                         >
-                            <Calendar className="w-3.5 h-3.5" />
-                            Milestones
+                            <Calendar className="w-3 h-3" />
+                            Journey
+                        </button>
+                        <button
+                            onClick={() => setShowJar(true)}
+                            className="flex items-center justify-center gap-2 bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-xl py-2.5 text-[10px] font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-all"
+                        >
+                            <Heart className="w-3 h-3 fill-current" />
+                            Jar
+                        </button>
+                        <button
+                            onClick={() => setShowMap(true)}
+                            className="flex items-center justify-center gap-2 bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-xl py-2.5 text-[10px] font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] transition-all"
+                        >
+                            <MapPin className="w-3 h-3" />
+                            Track
                         </button>
                     </div>
+
+                    {distance !== null && (
+                        <div className="mt-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-emerald-500" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Distance</span>
+                            </div>
+                            <span className="text-sm font-black text-emerald-500">{distance.toLocaleString()} km</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-3 lg:p-4">
@@ -787,10 +826,10 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         ))}
                     </div>
                 </div>
-            </aside >
+            </aside>
 
             {/* Main Chat */}
-            < main className="flex-1 flex flex-col min-w-0" >
+            <main className="flex-1 flex flex-col min-w-0">
                 <header className="h-14 lg:h-16 border-b border-border flex items-center justify-between px-3 lg:px-6 bg-card/30 backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                         <button
@@ -991,55 +1030,69 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                         >
                                             <ImageIcon className="w-5 h-5 text-muted-foreground" />
                                         </button>
+
+                                        {/* Desktop actions */}
+                                        <div className="hidden lg:flex items-center">
+                                            <button
+                                                onClick={() => setShowStickers(!showStickers)}
+                                                className="p-2 hover:bg-white/5 rounded-xl transition-colors shrink-0"
+                                            >
+                                                <Smile className="w-5 h-5 text-muted-foreground" />
+                                            </button>
+                                            <button
+                                                onClick={() => setIsDrawing(true)}
+                                                className="p-2 hover:bg-white/5 rounded-xl transition-colors shrink-0"
+                                            >
+                                                <Palette className="w-5 h-5 text-muted-foreground" />
+                                            </button>
+                                            <button
+                                                onClick={sendHug}
+                                                className="p-2 hover:bg-blue-500/10 rounded-xl transition-colors shrink-0 group"
+                                            >
+                                                <Ghost className="w-5 h-5 text-blue-500 transition-transform" />
+                                            </button>
+                                            <button
+                                                onClick={sendKiss}
+                                                className="p-2 hover:bg-pink-500/10 rounded-xl transition-colors shrink-0 group"
+                                            >
+                                                <Flame className="w-5 h-5 text-pink-500 transition-transform" />
+                                            </button>
+                                        </div>
+
+                                        {/* Mobile Toggle Button */}
                                         <button
-                                            onClick={() => setShowStickers(!showStickers)}
-                                            className="p-2 hover:bg-white/5 rounded-xl transition-colors shrink-0"
-                                        >
-                                            <Smile className="w-5 h-5 text-muted-foreground" />
-                                        </button>
-                                        <button
-                                            onClick={() => setIsDrawing(true)}
-                                            className="p-2 hover:bg-white/5 rounded-xl transition-colors shrink-0"
-                                        >
-                                            <Palette className="w-5 h-5 text-muted-foreground" />
-                                        </button>
-                                        <button
-                                            onClick={() => setIsDrawing(true)}
-                                            className="p-2 hover:bg-white/5 rounded-xl transition-colors shrink-0"
-                                        >
-                                            <Palette className="w-5 h-5 text-muted-foreground" />
-                                        </button>
-                                        <button
-                                            onClick={sendHug}
-                                            className="p-2 hover:bg-blue-500/10 rounded-xl transition-colors shrink-0 group"
-                                            title="Send a Virtual Hug"
-                                        >
-                                            <Ghost className="w-5 h-5 text-blue-500 group-hover:scale-125 transition-transform" />
-                                        </button>
-                                        <button
-                                            onClick={sendKiss}
-                                            className="p-2 hover:bg-pink-500/10 rounded-xl transition-colors shrink-0 group"
-                                            title="Send a Virtual Kiss"
-                                        >
-                                            <Flame className="w-5 h-5 text-pink-500 group-hover:scale-125 transition-transform" />
-                                        </button>
-                                        <button
-                                            onClick={() => setIsSecretMode(!isSecretMode)}
+                                            onClick={() => setShowMoreActions(!showMoreActions)}
                                             className={cn(
-                                                "p-2 rounded-xl transition-colors shrink-0 group",
-                                                isSecretMode ? "bg-amber-500/20 text-amber-500" : "hover:bg-white/5 text-muted-foreground"
+                                                "lg:hidden p-2 hover:bg-white/5 rounded-xl transition-all shrink-0",
+                                                showMoreActions && "rotate-45 text-primary"
                                             )}
-                                            title="Send a Secret Surprise"
+                                        >
+                                            <Plus className="w-5 h-5" />
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Mobile More Actions Menu */}
+                            <AnimatePresence>
+                                {showMoreActions && !inputValue && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                        animate={{ opacity: 1, y: -60, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                                        className="absolute bottom-20 left-4 bg-card/95 backdrop-blur-xl border border-white/10 p-2 rounded-2xl flex items-center gap-1 shadow-2xl z-50 lg:hidden"
+                                    >
+                                        <button onClick={() => { setShowStickers(!showStickers); setShowMoreActions(false); }} className="p-3 hover:bg-white/5 rounded-xl"><Smile className="w-5 h-5" /></button>
+                                        <button onClick={() => { setIsDrawing(true); setShowMoreActions(false); }} className="p-3 hover:bg-white/5 rounded-xl"><Palette className="w-5 h-5" /></button>
+                                        <button onClick={() => { sendHug(); setShowMoreActions(false); }} className="p-3 hover:bg-blue-500/10 rounded-xl"><Ghost className="w-5 h-5 text-blue-500" /></button>
+                                        <button onClick={() => { sendKiss(); setShowMoreActions(false); }} className="p-3 hover:bg-pink-500/10 rounded-xl"><Flame className="w-5 h-5 text-pink-500" /></button>
+                                        <button
+                                            onClick={() => { setIsSecretMode(!isSecretMode); setShowMoreActions(false); }}
+                                            className={cn("p-3 rounded-xl", isSecretMode ? "bg-amber-500/20 text-amber-500" : "hover:bg-white/5")}
                                         >
                                             {isSecretMode ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
                                         </button>
-                                        <button
-                                            onClick={sendHeartFirework}
-                                            className="p-2 hover:bg-red-500/10 rounded-xl transition-colors shrink-0 group"
-                                            title="Send Love Firework"
-                                        >
-                                            <Heart className="w-5 h-5 text-red-500 group-hover:scale-125 transition-transform fill-current" />
-                                        </button>
+                                        <button onClick={() => { sendHeartFirework(); setShowMoreActions(false); }} className="p-3 hover:bg-red-500/10 rounded-xl"><Heart className="w-5 h-5 text-red-500" /></button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -1318,7 +1371,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         </div>
                     )
                 }
-            </AnimatePresence >
+            </AnimatePresence>
 
             {/* Fullscreen Animations: Hug & Kiss */}
             <AnimatePresence>
@@ -1403,7 +1456,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         </div>
                     )
                 }
-            </AnimatePresence >
+            </AnimatePresence>
 
             {/* Love Features Overlays */}
             <AnimatePresence>
@@ -1424,8 +1477,24 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         role="nasywa"
                     />
                 )}
+                {showJar && (
+                    <JarOverlay
+                        notes={jarNotes}
+                        onClose={() => setShowJar(false)}
+                        onAdd={handleAddJarNote}
+                        role="nasywa"
+                    />
+                )}
+                {showMap && (
+                    <MapOverlay
+                        distance={distance}
+                        onClose={() => setShowMap(false)}
+                        myLocation={profiles.nasywa}
+                        partnerLocation={profiles.sajid}
+                    />
+                )}
             </AnimatePresence>
-        </div >
+        </div>
     );
 }
 
@@ -1725,6 +1794,167 @@ function MilestonesOverlay({ milestones, onClose, onAdd, role }: { milestones: a
                             </div>
                         </div>
                     </div>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+}
+
+function JarOverlay({ notes, onClose, onAdd, role }: { notes: any[], onClose: () => void, onAdd: (content: string) => void, role: string }) {
+    const [newNote, setNewNote] = useState("");
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 lg:p-8"
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                className="bg-card w-full max-w-2xl max-h-[90vh] rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl flex flex-col"
+            >
+                <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+                    <div>
+                        <h3 className="text-2xl font-black flex items-center gap-3">
+                            <Heart className="text-amber-500 fill-current" />
+                            Jar of Hearts
+                        </h3>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1">Daily gratitude & compliments</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
+                    <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <p className="text-sm font-bold mb-3 text-amber-500">✨ Write something you appreciate about your partner today:</p>
+                        <textarea
+                            value={newNote}
+                            onChange={(e) => setNewNote(e.target.value)}
+                            placeholder="Today I appreciate you for..."
+                            className="w-full bg-transparent resize-none outline-none text-sm font-medium italic placeholder:text-muted-foreground/30 min-h-[80px]"
+                        />
+                        <button
+                            onClick={() => {
+                                if (newNote.trim()) {
+                                    onAdd(newNote);
+                                    setNewNote("");
+                                }
+                            }}
+                            className="w-full py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-600 transition-all flex items-center justify-center gap-2 mt-3"
+                        >
+                            <Heart className="w-4 h-4 fill-current" />
+                            Add to Jar
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {notes.map((note, idx) => (
+                            <motion.div
+                                key={note.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20"
+                            >
+                                <p className="text-sm italic">"{note.content}"</p>
+                                <div className="flex items-center justify-between mt-3">
+                                    <span className="text-[10px] font-bold text-amber-500 uppercase">— {note.author}</span>
+                                    <span className="text-[10px] text-muted-foreground">{new Date(note.createdAt).toLocaleDateString()}</span>
+                                </div>
+                            </motion.div>
+                        ))}
+                        {notes.length === 0 && (
+                            <div className="text-center py-12 text-muted-foreground">
+                                <Heart className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                <p className="text-sm">No notes yet. Be the first to add one!</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+}
+
+function MapOverlay({ distance, onClose, myLocation, partnerLocation }: { distance: number | null, onClose: () => void, myLocation: any, partnerLocation: any }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 lg:p-8"
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                className="bg-card w-full max-w-lg max-h-[90vh] rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl flex flex-col"
+            >
+                <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+                    <div>
+                        <h3 className="text-2xl font-black flex items-center gap-3">
+                            <MapPin className="text-emerald-500" />
+                            Distance Tracker
+                        </h3>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1">Thinking of you from afar</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <div className="flex-1 p-6 lg:p-8 flex flex-col items-center justify-center">
+                    {distance !== null ? (
+                        <>
+                            <div className="relative w-48 h-48 mb-8">
+                                <motion.div
+                                    animate={{ scale: [1, 1.1, 1] }}
+                                    transition={{ repeat: Infinity, duration: 2 }}
+                                    className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/30"
+                                />
+                                <div className="absolute inset-4 rounded-full bg-gradient-to-br from-emerald-500/30 to-teal-500/30 border border-emerald-500/50 flex items-center justify-center flex-col">
+                                    <span className="text-4xl font-black text-emerald-500">{Math.round(distance).toLocaleString()}</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">kilometers</span>
+                                </div>
+                            </div>
+
+                            <div className="w-full flex items-center justify-between gap-4">
+                                <div className="flex-1 text-center p-4 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-pink-500/20 flex items-center justify-center">
+                                        <User className="w-6 h-6 text-pink-500" />
+                                    </div>
+                                    <p className="text-xs font-bold text-pink-500 uppercase">You</p>
+                                </div>
+
+                                <motion.div
+                                    animate={{ x: [0, 10, 0] }}
+                                    transition={{ repeat: Infinity, duration: 1.5 }}
+                                >
+                                    <Heart className="w-8 h-8 text-pink-500 fill-current" />
+                                </motion.div>
+
+                                <div className="flex-1 text-center p-4 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                        <User className="w-6 h-6 text-blue-500" />
+                                    </div>
+                                    <p className="text-xs font-bold text-blue-500 uppercase">Your Love</p>
+                                </div>
+                            </div>
+
+                            <p className="mt-8 text-center text-sm text-muted-foreground italic">
+                                "No matter the distance, our hearts are always close."
+                            </p>
+                        </>
+                    ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <MapPin className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                            <p className="text-sm">Enable location to see the distance between you</p>
+                            <p className="text-xs mt-2 opacity-50">Location permissions may be required</p>
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </motion.div>

@@ -25,7 +25,21 @@ model Profile {
   avatarUrl     String?
   mood          String?  // Happy, Miss You, Tired, Need a Hug
   moodUpdatedAt DateTime?
+  latitude      Float?
+  longitude     Float?
+  trackName     String?
+  trackArtist   String?
+  trackImage    String?
+  isPlaying     Boolean  @default(false)
+  ourSongUrl    String?
   updatedAt     DateTime @updatedAt
+}
+
+model JarNote {
+  id        String   @id @default(cuid())
+  content   String
+  author    String   // sajid or nasywa
+  createdAt DateTime @default(now())
 }
 
 model Message {
