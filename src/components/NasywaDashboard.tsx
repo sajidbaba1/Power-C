@@ -729,7 +729,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    text: inputValue,
+                    text: text,
                     sourceLang: "English",
                     targetLang: "Hindi"
                 }),

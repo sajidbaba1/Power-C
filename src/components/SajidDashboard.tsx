@@ -820,7 +820,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    text: inputValue,
+                    text: text,
                     sourceLang: "English",
                     targetLang: "Indonesian"
                 }),
