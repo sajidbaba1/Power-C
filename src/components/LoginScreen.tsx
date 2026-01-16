@@ -10,7 +10,6 @@ interface LoginProps {
 
 export default function LoginScreen({ onLogin }: LoginProps) {
     const [selectedRole, setSelectedRole] = useState<string>("");
-    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
     const users = [
@@ -20,25 +19,14 @@ export default function LoginScreen({ onLogin }: LoginProps) {
     ];
 
     const handleLogin = () => {
-        // Simple password check (you can enhance this)
-        const passwords: Record<string, string> = {
-            sajid: "sajid123",
-            nasywa: "nasywa123",
-            admin: "admin123"
-        };
-
         if (!selectedRole) {
             setError("Please select a user");
             return;
         }
 
-        if (password === passwords[selectedRole]) {
-            const user = users.find(u => u.role === selectedRole);
-            if (user) {
-                onLogin({ name: user.name, role: user.role });
-            }
-        } else {
-            setError("Incorrect password");
+        const user = users.find(u => u.role === selectedRole);
+        if (user) {
+            onLogin({ name: user.name, role: user.role });
         }
     };
 
@@ -69,13 +57,6 @@ export default function LoginScreen({ onLogin }: LoginProps) {
                                     onClick={() => {
                                         setSelectedRole(user.role);
                                         setError("");
-                                        // Auto-fill password for everyone EXCEPT admin
-                                        const passwords: Record<string, string> = {
-                                            sajid: "sajid123",
-                                            nasywa: "nasywa123",
-                                            admin: "" // Don't show admin password
-                                        };
-                                        setPassword(passwords[user.role]);
                                     }}
                                     className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${selectedRole === user.role
                                         ? "border-primary bg-primary/10 scale-105"
@@ -88,7 +69,7 @@ export default function LoginScreen({ onLogin }: LoginProps) {
                                     <div className="text-left flex-1">
                                         <p className="font-semibold">{user.name}</p>
                                         <p className="text-xs text-muted-foreground capitalize">
-                                            {user.role} {user.role !== 'admin' && `(Password: ${user.role}123)`}
+                                            {user.role}
                                         </p>
                                     </div>
                                     {selectedRole === user.role && (
@@ -102,21 +83,6 @@ export default function LoginScreen({ onLogin }: LoginProps) {
                     </div>
 
                     <div className="space-y-4">
-                        <div>
-                            <label className="text-sm text-muted-foreground mb-2 block">Password</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => {
-                                    setPassword(e.target.value);
-                                    setError("");
-                                }}
-                                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                                placeholder="Enter your password"
-                                className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border outline-none focus:ring-2 focus:ring-primary transition-all"
-                            />
-                        </div>
-
                         {error && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
@@ -129,7 +95,7 @@ export default function LoginScreen({ onLogin }: LoginProps) {
 
                         <button
                             onClick={handleLogin}
-                            disabled={!selectedRole || !password}
+                            disabled={!selectedRole}
                             className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed neon-border"
                         >
                             Login
