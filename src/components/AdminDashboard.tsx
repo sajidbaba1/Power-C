@@ -16,7 +16,14 @@ import {
     Image as ImageIcon,
     Menu,
     X,
-    Clock
+    Clock,
+    Play,
+    Volume2,
+    Heart,
+    Sparkles,
+    CloudSnow,
+    CloudRain,
+    Zap
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -37,6 +44,12 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     const [isLoading, setIsLoading] = useState(false);
     const [showSidebar, setShowSidebar] = useState(false);
     const [loginHistory, setLoginHistory] = useState<any[]>([]);
+    const [vibeSettings, setVibeSettings] = useState({
+        isPlaying: false,
+        effect: "none",
+        sajidVolume: 100,
+        nasywaVolume: 100
+    });
 
     useEffect(() => {
         fetchKeys();
@@ -111,6 +124,40 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
             console.error(e);
             alert("Error deleting key");
         }
+    };
+
+    const broadcastMusic = async (updates: any) => {
+        const sorted = ["sajid", "nasywa"].sort();
+        const chatKey = sorted.join('-');
+
+        await fetch("/api/chat/music", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                chatKey,
+                ...updates
+            })
+        });
+    };
+
+    const handleStartVibes = () => {
+        broadcastMusic({ isPlaying: true });
+        setVibeSettings(prev => ({ ...prev, isPlaying: true }));
+    };
+
+    const handleStopVibes = () => {
+        broadcastMusic({ isPlaying: false });
+        setVibeSettings(prev => ({ ...prev, isPlaying: false }));
+    };
+
+    const handleSetEffect = (effect: string) => {
+        broadcastMusic({ effect });
+        setVibeSettings(prev => ({ ...prev, effect }));
+    };
+
+    const handleSetVolume = (target: 'sajid' | 'nasywa', volume: number) => {
+        broadcastMusic({ [`${target}Volume`]: volume / 100 });
+        setVibeSettings(prev => ({ ...prev, [`${target}Volume`]: volume }));
     };
 
     const palettes = [
@@ -262,6 +309,21 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                         >
                             <Clock className="w-5 h-5" />
                             <span className="font-semibold text-sm">Login History</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab("vibe-controller");
+                                setShowSidebar(false);
+                            }}
+                            className={cn(
+                                "w-full p-3 lg:p-4 rounded-2xl transition-all flex items-center gap-3",
+                                activeTab === "vibe-controller"
+                                    ? "bg-pink-500/10 border-2 border-pink-500"
+                                    : "glass border border-white/5 hover:border-white/20"
+                            )}
+                        >
+                            <Zap className="w-5 h-5 text-pink-500" />
+                            <span className="font-semibold text-sm">Vibe Controller</span>
                         </button>
                     </div>
                 </div>
@@ -533,6 +595,99 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                )}
+                {activeTab === "vibe-controller" && (
+                    <div className="space-y-8 max-w-4xl mx-auto">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-8 rounded-[2.5rem] border border-pink-500/20 shadow-2xl shadow-pink-500/10"
+                        >
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+                                <div>
+                                    <h1 className="text-4xl font-black mb-2 flex items-center gap-3">
+                                        <Zap className="w-8 h-8 text-pink-500 fill-current" />
+                                        Vibe Master
+                                    </h1>
+                                    <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Synchronize the magic across the world</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={handleStartVibes}
+                                        className="px-8 py-4 bg-pink-500 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-pink-500/40 flex items-center gap-2"
+                                    >
+                                        <Play className="w-5 h-5 fill-current" /> Start Vibing
+                                    </button>
+                                    <button
+                                        onClick={handleStopVibes}
+                                        className="px-8 py-4 bg-zinc-800 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-zinc-700 transition-all border border-white/10"
+                                    >
+                                        Stop All
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Left: Effects */}
+                                <div className="space-y-6">
+                                    <h2 className="text-lg font-bold flex items-center gap-2">
+                                        <Sparkles className="w-5 h-5 text-yellow-500" />
+                                        Atmospheric Effects
+                                    </h2>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { id: "none", label: "Clear Sky", icon: X },
+                                            { id: "hearts", label: "Love Rain", icon: Heart },
+                                            { id: "snow", label: "Winter Magic", icon: CloudSnow },
+                                            { id: "rain", label: "Midnight Rain", icon: CloudRain },
+                                            { id: "stars", label: "Starlight", icon: Zap },
+                                            { id: "butterflies", label: "Magic Flutter", icon: Sparkles }
+                                        ].map((eff) => (
+                                            <button
+                                                key={eff.id}
+                                                onClick={() => handleSetEffect(eff.id)}
+                                                className={cn(
+                                                    "p-4 rounded-xl flex items-center gap-3 transition-all font-bold text-sm",
+                                                    vibeSettings.effect === eff.id
+                                                        ? "bg-white text-black scale-105 shadow-xl"
+                                                        : "bg-white/5 border border-white/10 hover:bg-white/10"
+                                                )}
+                                            >
+                                                <eff.icon className="w-4 h-4" />
+                                                {eff.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Right: Individual Volume */}
+                                <div className="space-y-6">
+                                    <h2 className="text-lg font-bold flex items-center gap-2">
+                                        <Volume2 className="w-5 h-5 text-blue-500" />
+                                        Individual Presence
+                                    </h2>
+                                    <div className="space-y-6">
+                                        {['sajid', 'nasywa'].map((u) => (
+                                            <div key={u} className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <span className="font-black uppercase tracking-widest text-sm capitalize">{u}</span>
+                                                    <span className="text-xs font-bold text-muted-foreground">{(vibeSettings as any)[`${u}Volume`]}%</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="100"
+                                                    value={(vibeSettings as any)[`${u}Volume`]}
+                                                    onChange={(e) => handleSetVolume(u as any, parseInt(e.target.value))}
+                                                    className="w-full accent-pink-500 bg-white/10 rounded-lg h-2 cursor-pointer"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
                 )}
             </main>

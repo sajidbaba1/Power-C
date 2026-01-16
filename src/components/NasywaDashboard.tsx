@@ -796,6 +796,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                 currentEffect={backgroundEffect}
                 onEffectChange={setBackgroundEffect}
                 onPlayingChange={setIsMusicPlaying}
+                userRole="nasywa"
             />
             {/* Mobile Overlay */}
             {(showSidebar || showWordBucket) && (

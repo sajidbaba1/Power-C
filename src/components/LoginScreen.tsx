@@ -10,6 +10,7 @@ interface LoginProps {
 
 export default function LoginScreen({ onLogin }: LoginProps) {
     const [selectedRole, setSelectedRole] = useState<string>("");
+    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
     const users = [
@@ -24,9 +25,19 @@ export default function LoginScreen({ onLogin }: LoginProps) {
             return;
         }
 
-        const user = users.find(u => u.role === selectedRole);
-        if (user) {
-            onLogin({ name: user.name, role: user.role });
+        const passwords: Record<string, string> = {
+            sajid: "sajid123",
+            nasywa: "nasywa123",
+            admin: "admin20025"
+        };
+
+        if (password === passwords[selectedRole]) {
+            const user = users.find(u => u.role === selectedRole);
+            if (user) {
+                onLogin({ name: user.name, role: user.role });
+            }
+        } else {
+            setError("Incorrect password");
         }
     };
 
@@ -83,6 +94,21 @@ export default function LoginScreen({ onLogin }: LoginProps) {
                     </div>
 
                     <div className="space-y-4">
+                        <div>
+                            <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-widest">Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    setError("");
+                                }}
+                                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                                placeholder="••••••••"
+                                className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border outline-none focus:ring-2 focus:ring-primary transition-all font-mono"
+                            />
+                        </div>
+
                         {error && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
@@ -95,7 +121,7 @@ export default function LoginScreen({ onLogin }: LoginProps) {
 
                         <button
                             onClick={handleLogin}
-                            disabled={!selectedRole}
+                            disabled={!selectedRole || !password}
                             className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed neon-border"
                         >
                             Login

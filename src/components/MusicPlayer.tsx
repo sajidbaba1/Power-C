@@ -55,14 +55,16 @@ interface MusicPlayerProps {
     currentEffect: EffectType;
     onEffectChange: (effect: EffectType) => void;
     onPlayingChange?: (isPlaying: boolean) => void;
+    userRole?: string;
 }
 
-export default function MusicPlayer({ activeChat, pusherClient, currentEffect, onEffectChange, onPlayingChange }: MusicPlayerProps) {
+export default function MusicPlayer({ activeChat, pusherClient, currentEffect, onEffectChange, onPlayingChange, userRole }: MusicPlayerProps) {
     const [playlist, setPlaylist] = useState<Song[]>(LOCAL_SONGS);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
+    const [volume, setVolume] = useState(1);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => setMounted(true), []);
@@ -71,6 +73,11 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
     useEffect(() => {
         setPlaylist([...LOCAL_SONGS].sort(() => Math.random() - 0.5));
     }, []);
+
+    // Report state changes to parent (fixes slideshow bug)
+    useEffect(() => {
+        if (onPlayingChange) onPlayingChange(isPlaying);
+    }, [isPlaying, onPlayingChange]);
 
     // Sync via Pusher
     useEffect(() => {
@@ -84,16 +91,21 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
 
         const channel = pusherClient.subscribe(chatKey);
         channel.bind("music-update", (data: any) => {
+            console.log("🎵 Remote Music Update:", data);
             if (data.index !== undefined) setCurrentIndex(data.index);
-            if (data.isPlaying !== undefined) setIsPlaying(data.isPlaying);
-            // We ignore playlist updates from remote to force local files for stability
+            if (data.isPlaying !== undefined) {
+                setIsPlaying(data.isPlaying);
+                if (data.isPlaying) setHasInteracted(true);
+            }
+            if (data.effect !== undefined) onEffectChange(data.effect as EffectType);
+
+            // Handle individual volume control from Admin
+            if (userRole === 'sajid' && data.sajidVolume !== undefined) setVolume(data.sajidVolume);
+            if (userRole === 'nasywa' && data.nasywaVolume !== undefined) setVolume(data.nasywaVolume);
         });
 
-        // Also broadcast initial generic "I am here" to sync state? 
-        // No, keep it simple.
-
         return () => channel.unbind("music-update");
-    }, [pusherClient, activeChat]);
+    }, [pusherClient, activeChat, onEffectChange, userRole]);
 
     // Apply Effect when song changes
     useEffect(() => {
@@ -117,7 +129,7 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                 chatKey,
                 index: updates.index !== undefined ? updates.index : currentIndex,
                 isPlaying: updates.isPlaying !== undefined ? updates.isPlaying : isPlaying,
-                playlist: [] // Don't send the full playlist to save bandwidth/conflicts
+                playlist: []
             })
         });
     };
@@ -150,18 +162,17 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
         }
     }, [isPlaying, hasInteracted, currentIndex, playlist]);
 
-    // Update volume
+    // Update volume based on mute and current volume set by admin
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.volume = isMuted ? 0 : 1;
+            audioRef.current.volume = isMuted ? 0 : volume;
         }
-    }, [isMuted]);
+    }, [isMuted, volume]);
 
     if (!mounted) return null;
 
     return (
         <>
-            {/* Native Audio Element for high reliability */}
             <audio
                 ref={audioRef}
                 src={playlist[currentIndex]?.url}
@@ -172,9 +183,8 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                 style={{ display: 'none' }}
             />
 
-            {/* UI: Simple "Start" Button or Minimal Controls */}
             <div className="fixed bottom-24 left-4 z-[9999]">
-                {!hasInteracted || !isPlaying ? (
+                {!isPlaying ? (
                     <button
                         onClick={handleStart}
                         className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-bounce flex items-center gap-2 transition-all"
@@ -183,7 +193,6 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                         Start Vibes 🎵
                     </button>
                 ) : (
-                    // Minimal controls when playing
                     <div className="flex items-center gap-2 bg-zinc-900/90 border border-pink-500/30 backdrop-blur-md p-2 rounded-full shadow-2xl hover:scale-105 transition-all">
                         <div className="px-2 max-w-[150px] truncate text-xs text-white font-medium">
                             {playlist[currentIndex]?.title}

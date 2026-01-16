@@ -888,6 +888,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                 currentEffect={backgroundEffect}
                 onEffectChange={setBackgroundEffect}
                 onPlayingChange={setIsMusicPlaying}
+                userRole="sajid"
             />
             {/* Mobile Overlay */}
             {(showSidebar || showWordBucket) && (
