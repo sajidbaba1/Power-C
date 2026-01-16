@@ -31,9 +31,11 @@ export const getPrisma = (): PrismaClient => {
 
     // Direct connection with config object
     try {
-        prisma = new PrismaClient({
+        // Use type-casting to bypass strict constructor checks that vary between Prisma versions
+        const options: any = {
             datasourceUrl: url,
-        });
+        };
+        prisma = new PrismaClient(options);
         return prisma;
     } catch (e) {
         console.error("Failed to initialize PrismaClient:", e);
