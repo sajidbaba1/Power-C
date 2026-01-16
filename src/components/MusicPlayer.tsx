@@ -55,6 +55,16 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
             chatKey = activeChat;
         }
 
+        // Fetch persisted playlist
+        fetch(`/api/chat/music?chatKey=${chatKey}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.playlist && data.playlist.length > 0) {
+                    setPlaylist(data.playlist);
+                }
+            })
+            .catch(e => console.error("Failed to load playlist", e));
+
         const channel = pusherClient.subscribe(chatKey);
 
         channel.bind("music-update", (data: any) => {

@@ -104,3 +104,13 @@ model ChatActivity {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model PlaylistSong {
+  id        String   @id @default(cuid())
+  url       String
+  title     String
+  effect    String
+  chatKey   String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
