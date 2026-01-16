@@ -198,13 +198,17 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                     </button>
                 )}
 
-                {/* Hidden React Player (Use opacity-0 instead of display:none to allow audio) */}
-                <div className="fixed bottom-0 right-0 w-px h-px opacity-0 overflow-hidden pointer-events-none">
+                {/* Hidden React Player (Technically visible 1px to bypass browser checks) */}
+                <div className="fixed bottom-0 right-0 w-px h-px overflow-hidden z-[9999]">
                     <ReactPlayer
                         url={playlist[currentIndex]?.url}
                         playing={isPlaying}
                         volume={volume}
+                        muted={false}
                         onEnded={handleNext}
+                        onReady={() => console.log("Player Ready")}
+                        onStart={() => console.log("Player Started")}
+                        onPlay={() => console.log("Player Playing")}
                         onError={(e: any) => console.error("ReactPlayer Error:", e)}
                         width="1px"
                         height="1px"
