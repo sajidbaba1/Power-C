@@ -149,8 +149,16 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                         playing={isPlaying}
                         volume={volume}
                         onEnded={handleNext}
-                        width="0"
-                        height="0"
+                        onError={(e: any) => console.error("ReactPlayer Error:", e)}
+                        width="1px"
+                        height="1px"
+                        style={{ position: 'absolute', top: '-1000px', left: '-1000px', pointerEvents: 'none' }}
+                        playsinline={true}
+                        config={{
+                            youtube: {
+                                playerVars: { showinfo: 0, controls: 0, disablekb: 1, origin: typeof window !== 'undefined' ? window.location.origin : undefined }
+                            }
+                        }}
                     />
                 </div>
 
