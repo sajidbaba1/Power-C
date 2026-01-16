@@ -7,7 +7,10 @@ const YOUTUBE_VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos";
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query");
-    const videoId = searchParams.get("videoId");
+    let videoId = searchParams.get("videoId");
+    if (videoId?.includes("?")) {
+        videoId = videoId.split("?")[0];
+    }
 
     if (!YOUTUBE_API_KEY) {
         // Fallback for development if no key provided: return mock data or error
