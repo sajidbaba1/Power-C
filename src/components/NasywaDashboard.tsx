@@ -54,6 +54,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [milestones, setMilestones] = useState<any[]>([]);
     const [currentHug, setCurrentHug] = useState<boolean>(false);
     const [currentKiss, setCurrentKiss] = useState<boolean>(false);
+    const [currentMumma, setCurrentMumma] = useState<boolean>(false);
     const [isSecretMode, setIsSecretMode] = useState(false);
     const [secretUnlockTime, setSecretUnlockTime] = useState<string>("20:00");
     const [jarNotes, setJarNotes] = useState<any[]>([]);
@@ -359,6 +360,11 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         channel.bind("kiss", () => {
             setCurrentKiss(true);
             setTimeout(() => setCurrentKiss(false), 5000);
+        });
+
+        channel.bind("mumma", () => {
+            setCurrentMumma(true);
+            setTimeout(() => setCurrentMumma(false), 5000);
         });
 
         channel.bind("new-lovenote", (note: any) => {
@@ -1504,6 +1510,37 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                 className="absolute inset-x-0 -bottom-10 text-center"
                             >
                                 <span className="text-4xl font-black text-white drop-shadow-lg uppercase tracking-widest bg-black/20 px-4 py-2 rounded-2xl backdrop-blur-sm whitespace-nowrap">Big Kiss! 💋</span>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {currentMumma && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.5 }}
+                        className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
+                    >
+                        <div className="relative text-center">
+                            <motion.div
+                                animate={{
+                                    y: [0, -20, 0],
+                                    scale: [1, 1.1, 1],
+                                    rotate: [0, -5, 5, 0]
+                                }}
+                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                            >
+                                <span className="text-[150px] lg:text-[300px] leading-none drop-shadow-[0_0_50px_rgba(255,255,255,0.5)]">🥺</span>
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 50 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute inset-x-0 -bottom-20 text-center"
+                            >
+                                <span className="text-4xl lg:text-6xl font-black text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] bg-black/30 px-8 py-4 rounded-3xl backdrop-blur-md">
+                                    Mumma... Please?
+                                </span>
                             </motion.div>
                         </div>
                     </motion.div>
