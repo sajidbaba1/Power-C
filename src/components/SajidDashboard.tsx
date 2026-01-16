@@ -9,6 +9,8 @@ import confetti from "canvas-confetti";
 import { getPusherClient } from "@/lib/pusher";
 import InteractiveMap from "@/components/InteractiveMap";
 import StreakOverlay from "@/components/StreakOverlay";
+import MusicPlayer, { EffectType } from './MusicPlayer';
+import BackgroundEffects from './BackgroundEffects';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -20,6 +22,7 @@ interface SajidDashboardProps {
 }
 
 export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) {
+    const pusher = getPusherClient();
     const [activeChat, setActiveChat] = useState<"nasywa" | "admin">("nasywa");
     const [messages, setMessages] = useState<Record<string, any[]>>({
         nasywa: [],
@@ -46,6 +49,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     const [currentBabyGirl, setCurrentBabyGirl] = useState<boolean>(false);
     const [currentBabyBoy, setCurrentBabyBoy] = useState<boolean>(false);
     const [activeAnimation, setActiveAnimation] = useState<string | null>(null);
+    const [backgroundEffect, setBackgroundEffect] = useState<EffectType>("none");
     const [unlockTimer, setUnlockTimer] = useState<Record<string, string>>({});
     const [isSecretMode, setIsSecretMode] = useState(false);
     const [secretUnlockTime, setSecretUnlockTime] = useState<string>("20:00");
@@ -874,6 +878,13 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
 
     return (
         <div className="flex h-[100dvh] bg-background overflow-hidden relative">
+            <BackgroundEffects effect={backgroundEffect} />
+            <MusicPlayer
+                activeChat={activeChat}
+                pusherClient={pusher}
+                currentEffect={backgroundEffect}
+                onEffectChange={setBackgroundEffect}
+            />
             {/* Mobile Overlay */}
             {(showSidebar || showWordBucket) && (
                 <div

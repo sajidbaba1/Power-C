@@ -9,6 +9,8 @@ import confetti from "canvas-confetti";
 import { getPusherClient } from "@/lib/pusher";
 import InteractiveMap from "@/components/InteractiveMap";
 import StreakOverlay from "@/components/StreakOverlay";
+import MusicPlayer, { EffectType } from './MusicPlayer';
+import BackgroundEffects from './BackgroundEffects';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -20,7 +22,9 @@ interface NasywaDashboardProps {
 }
 
 export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps) {
+    const pusher = getPusherClient();
     const [activeChat, setActiveChat] = useState<"sajid" | "admin">("sajid");
+    const [backgroundEffect, setBackgroundEffect] = useState<EffectType>("none");
     const [messages, setMessages] = useState<Record<string, any[]>>({
         sajid: [],
         admin: []
@@ -782,6 +786,13 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
 
     return (
         <div className="flex h-[100dvh] bg-background overflow-hidden relative">
+            <BackgroundEffects effect={backgroundEffect} />
+            <MusicPlayer
+                activeChat={activeChat}
+                pusherClient={pusher}
+                currentEffect={backgroundEffect}
+                onEffectChange={setBackgroundEffect}
+            />
             {/* Mobile Overlay */}
             {(showSidebar || showWordBucket) && (
                 <div
