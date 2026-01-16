@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile } from "lucide-react";
+import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -31,8 +31,25 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [isRecording, setIsRecording] = useState(false);
     const [isDrawing, setIsDrawing] = useState(false);
     const [showStickers, setShowStickers] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [profiles, setProfiles] = useState<Record<string, any>>({});
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const fetchProfiles = async () => {
+            try {
+                const [p1, p2] = await Promise.all([
+                    fetch(`/api/profiles?role=nasywa`).then(r => r.json()),
+                    fetch(`/api/profiles?role=sajid`).then(r => r.json())
+                ]);
+                setProfiles({ nasywa: p1, sajid: p2 });
+            } catch (e) {
+                console.error("Failed to fetch profiles", e);
+            }
+        };
+        fetchProfiles();
+    }, []);
 
     const handleClearChat = async () => {
         if (!confirm("Clear this chat permanently?")) return;
@@ -113,6 +130,48 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             setInputValue(transcript);
         };
         recognition.start();
+    };
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64 = reader.result as string;
+            try {
+                const uploadRes = await fetch("/api/images", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        image: base64,
+                        sender: "nasywa",
+                        receiver: "system",
+                        viewType: "permanent"
+                    })
+                });
+                const uploadData = await uploadRes.json();
+                if (uploadData.success) {
+                    const newAvatar = uploadData.image.url;
+                    await fetch("/api/profiles", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            role: "nasywa",
+                            name: profiles.nasywa?.name || "Nasywa",
+                            avatarUrl: newAvatar
+                        })
+                    });
+                    setProfiles(prev => ({
+                        ...prev,
+                        nasywa: { ...prev.nasywa, avatarUrl: newAvatar }
+                    }));
+                }
+            } catch (err) {
+                console.error("Avatar upload failed", err);
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const scrollToBottom = () => {
@@ -277,17 +336,26 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                 <div className="p-4 lg:p-6 border-b border-border">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                                <User className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center overflow-hidden">
+                                {profiles.nasywa?.avatarUrl ? (
+                                    <img src={profiles.nasywa.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                                )}
                             </div>
                             <div>
-                                <h2 className="font-semibold text-sm lg:text-base">{user.name}</h2>
+                                <h2 className="font-semibold text-sm lg:text-base">{profiles.nasywa?.name || user.name}</h2>
                                 <p className="text-xs text-muted-foreground">Learning Hindi</p>
                             </div>
                         </div>
-                        <button onClick={onLogout} className="p-2 hover:bg-muted rounded-lg transition-colors">
-                            <LogOut className="w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground" />
-                        </button>
+                        <div className="flex gap-1">
+                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                                <Settings className="w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground" />
+                            </button>
+                            <button onClick={onLogout} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                                <LogOut className="w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -307,12 +375,16 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                         : "glass border border-white/5 hover:border-white/20"
                                 )}
                             >
-                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${partner.color} flex items-center justify-center relative`}>
-                                    <User className="w-5 h-5 text-white" />
+                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${partner.color} flex items-center justify-center relative overflow-hidden`}>
+                                    {profiles[partner.id]?.avatarUrl ? (
+                                        <img src={profiles[partner.id].avatarUrl} alt={partner.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="w-5 h-5 text-white" />
+                                    )}
                                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
                                 </div>
                                 <div className="flex-1 text-left">
-                                    <p className="font-semibold text-sm">{partner.name}</p>
+                                    <p className="font-semibold text-sm">{profiles[partner.id]?.name || partner.name}</p>
                                     <p className="text-xs text-muted-foreground">
                                         {messages[partner.id as keyof typeof messages]?.length || 0} messages
                                     </p>
@@ -333,11 +405,15 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br ${chatPartners.find(p => p.id === activeChat)?.color} flex items-center justify-center shrink-0`}>
-                            <User className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+                        <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br ${chatPartners.find(p => p.id === activeChat)?.color} flex items-center justify-center shrink-0 overflow-hidden`}>
+                            {profiles[activeChat]?.avatarUrl ? (
+                                <img src={profiles[activeChat].avatarUrl} alt={activeChat} className="w-full h-full object-cover" />
+                            ) : (
+                                <User className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+                            )}
                         </div>
                         <div className="min-w-0">
-                            <h2 className="font-semibold text-sm lg:text-base capitalize truncate">{activeChat}</h2>
+                            <h2 className="font-semibold text-sm lg:text-base capitalize truncate">{profiles[activeChat]?.name || activeChat}</h2>
                             <p className="text-[10px] lg:text-xs text-green-500">Online</p>
                         </div>
                     </div>
@@ -372,46 +448,58 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className={cn(
-                                    "flex flex-col gap-1 max-w-[85%] lg:max-w-[75%]",
-                                    msg.sender === "nasywa" ? "ml-auto items-end" : "mr-auto items-start"
+                                    "flex gap-3 max-w-[85%] lg:max-w-[75%]",
+                                    msg.sender === "nasywa" ? "ml-auto flex-row-reverse" : "mr-auto flex-row"
                                 )}
                             >
                                 <div className={cn(
-                                    "p-3 lg:p-4 rounded-2xl glass transition-all",
-                                    msg.sender === "nasywa" ? "bg-primary/20 rounded-tr-none" : "bg-muted/50 rounded-tl-none"
+                                    "w-8 h-8 rounded-lg shrink-0 flex items-center justify-center overflow-hidden",
+                                    msg.sender === "nasywa" ? "bg-pink-500" : "bg-blue-500"
                                 )}>
-                                    <div className="text-sm lg:text-base break-words">
-                                        {msg.imageUrl ? (
-                                            <img src={msg.imageUrl} alt="Sent" className="max-w-full rounded-lg mb-2 shadow-lg cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
-                                        ) : msg.isHeart ? (
-                                            <motion.div
-                                                animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
-                                                transition={{ repeat: Infinity, duration: 1 }}
-                                                className="text-4xl"
-                                            >
-                                                ❤️
-                                            </motion.div>
-                                        ) : msg.isSticker ? (
-                                            <div className="text-5xl">{msg.text}</div>
-                                        ) : (
-                                            msg.text
-                                        )}
-                                    </div>
-                                    {msg.status === "sending" && (
-                                        <div className="mt-1 flex items-center gap-1">
-                                            <div className="w-1 h-1 bg-primary rounded-full animate-bounce" />
-                                            <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
-                                            <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
-                                            <span className="text-[9px] text-muted-foreground ml-1">Translating...</span>
-                                        </div>
-                                    )}
-                                    {msg.translation && (
-                                        <div className="mt-2 pt-2 border-t border-white/5">
-                                            <p className="text-xs text-indigo-300 italic">{msg.translation}</p>
-                                        </div>
+                                    {profiles[msg.sender]?.avatarUrl ? (
+                                        <img src={profiles[msg.sender].avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="w-4 h-4 text-white" />
                                     )}
                                 </div>
-                                <span className="text-[10px] text-muted-foreground px-2">{msg.timestamp}</span>
+                                <div className={cn("flex flex-col gap-1", msg.sender === "nasywa" ? "items-end" : "items-start")}>
+                                    <div className={cn(
+                                        "p-3 lg:p-4 rounded-2xl glass transition-all",
+                                        msg.sender === "nasywa" ? "bg-primary/20 rounded-tr-none" : "bg-muted/50 rounded-tl-none"
+                                    )}>
+                                        <div className="text-sm lg:text-base break-words">
+                                            {msg.imageUrl ? (
+                                                <img src={msg.imageUrl} alt="Sent" className="max-w-full rounded-lg mb-2 shadow-lg cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                                            ) : msg.isHeart ? (
+                                                <motion.div
+                                                    animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
+                                                    transition={{ repeat: Infinity, duration: 1 }}
+                                                    className="text-4xl"
+                                                >
+                                                    ❤️
+                                                </motion.div>
+                                            ) : msg.isSticker ? (
+                                                <div className="text-5xl">{msg.text}</div>
+                                            ) : (
+                                                msg.text
+                                            )}
+                                        </div>
+                                        {msg.status === "sending" && (
+                                            <div className="mt-1 flex items-center gap-1">
+                                                <div className="w-1 h-1 bg-primary rounded-full animate-bounce" />
+                                                <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                                                <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                                                <span className="text-[9px] text-muted-foreground ml-1">Translating...</span>
+                                            </div>
+                                        )}
+                                        {msg.translation && (
+                                            <div className="mt-2 pt-2 border-t border-white/5">
+                                                <p className="text-xs text-indigo-300 italic">{msg.translation}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground px-2">{msg.timestamp}</span>
+                                </div>
                             </motion.div>
                         ))
                     )}
@@ -619,6 +707,92 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                     </div>
                 )}
             </aside>
+            {/* Settings Modal */}
+            <AnimatePresence>
+                {showSettings && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowSettings(false)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative w-full max-w-md glass border border-white/20 rounded-3xl p-8 shadow-2xl overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-rose-500" />
+                            <div className="flex justify-between items-center mb-8">
+                                <h2 className="text-2xl font-bold font-display">Profile Settings</h2>
+                                <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-6">
+                                <div className="relative group">
+                                    <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center overflow-hidden border-4 border-white/10 shadow-xl transition-transform group-hover:scale-105">
+                                        {profiles.nasywa?.avatarUrl ? (
+                                            <img src={profiles.nasywa.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="w-12 h-12 text-white" />
+                                        )}
+                                    </div>
+                                    <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-all cursor-pointer rounded-3xl">
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                                        <div className="flex flex-col items-center gap-1">
+                                            <Upload className="w-8 h-8 text-white" />
+                                            <span className="text-[10px] text-white font-bold uppercase">Update</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <p className="text-xs text-muted-foreground font-medium text-center">Your profile picture is stored securely in Cloudinary.</p>
+
+                                <div className="w-full space-y-5">
+                                    <div>
+                                        <label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-2 block">Display Name</label>
+                                        <input
+                                            type="text"
+                                            value={profiles.nasywa?.name || ""}
+                                            onChange={(e) => {
+                                                const newName = e.target.value;
+                                                setProfiles(prev => ({
+                                                    ...prev,
+                                                    nasywa: { ...prev.nasywa, name: newName }
+                                                }));
+                                            }}
+                                            onBlur={async () => {
+                                                if (!profiles.nasywa) return;
+                                                await fetch("/api/profiles", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({
+                                                        role: "nasywa",
+                                                        name: profiles.nasywa.name,
+                                                        avatarUrl: profiles.nasywa.avatarUrl
+                                                    })
+                                                });
+                                            }}
+                                            placeholder="Your name"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-pink-500 focus:bg-white/10 transition-all font-medium"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowSettings(false)}
+                                className="w-full mt-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold shadow-lg shadow-pink-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                                Save Changes
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

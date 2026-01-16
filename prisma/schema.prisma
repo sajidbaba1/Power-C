@@ -18,6 +18,14 @@ model ApiKey {
   updatedAt DateTime @updatedAt
 }
 
+model Profile {
+  id        String   @id @default(cuid())
+  role      String   @unique // sajid or nasywa
+  name      String
+  avatarUrl String?
+  updatedAt DateTime @updatedAt
+}
+
 model Message {
   id               String   @id @default(cuid())
   text             String
