@@ -133,7 +133,7 @@ export async function translateAndAnalyze(text: string, sourceLang: string, targ
         // Do NOT add error messages to wordBreakdown as it pollutes the user's vocabulary list
         return {
             translation: text,
-            hindiTranslation: "AI Logic Offline",
+            hindiTranslation: `AI Logic Offline: ${error.message || 'Unknown Error'}`,
             wordBreakdown: []
         };
     }
