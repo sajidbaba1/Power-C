@@ -136,19 +136,27 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
 
     return (
         <>
-            {/* Invisible Player */}
-            <div className="fixed bottom-0 right-0 w-px h-px overflow-hidden opacity-0 pointer-events-none">
+            {/* UI: Hidden but rendered for the browser to allow audio */}
+            <div className="fixed -left-[9999px] top-0 overflow-hidden pointer-events-none">
                 <ReactPlayer
+                    key={playlist[currentIndex]?.url}
                     url={playlist[currentIndex]?.url}
                     playing={isPlaying && hasInteracted}
-                    volume={isMuted ? 0 : 0.8}
+                    volume={isMuted ? 0 : 1}
                     muted={false}
                     onEnded={handleNext}
-                    width="1px"
-                    height="1px"
-                    playsinline={true}
-                    onError={(e: any) => console.log("Audio Error:", e)}
-                    config={{ file: { forceAudio: true } }}
+                    onReady={() => console.log("🎵 Player Ready")}
+                    onStart={() => console.log("🎵 Playback Started")}
+                    onError={(e: any) => console.error("🎵 Audio Error:", e)}
+                    config={{
+                        file: {
+                            forceAudio: true,
+                            attributes: {
+                                preload: "auto",
+                                crossOrigin: "anonymous"
+                            }
+                        }
+                    }}
                 />
             </div>
 
