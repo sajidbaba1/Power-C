@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/db";
+import { pusherServer } from "@/lib/pusher";
 
 function getChatKey(user1: string, user2: string) {
     const sorted = [user1, user2].sort();
@@ -78,6 +79,13 @@ export async function POST(req: Request) {
             });
         }
 
+        // Trigger Pusher event
+        try {
+            await pusherServer.trigger(chatKey, "new-message", savedMessage);
+        } catch (pushErr) {
+            console.error("Pusher trigger failed:", pushErr);
+        }
+
         console.log(`API POST: Success for ${message.id}`);
         return NextResponse.json({ success: true, message: savedMessage });
     } catch (error: any) {
@@ -102,6 +110,13 @@ export async function DELETE(req: Request) {
         await prisma.message.deleteMany({
             where: { chatKey }
         });
+
+        // Trigger Pusher event
+        try {
+            await pusherServer.trigger(chatKey, "clear-chat", { success: true });
+        } catch (pushErr) {
+            console.error("Pusher trigger failed:", pushErr);
+        }
 
         return NextResponse.json({ success: true, message: "Chat cleared" });
     } catch (error: any) {

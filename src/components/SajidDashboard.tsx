@@ -6,6 +6,7 @@ import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image 
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import confetti from "canvas-confetti";
+import { getPusherClient } from "@/lib/pusher";
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -196,48 +197,59 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
         }
     }, [messages, activeChat]);
 
-    // Fetch messages from server
+    // Real-time synchronization with Pusher
     useEffect(() => {
-        const fetchMessages = async () => {
+        const fetchInitialMessages = async () => {
             try {
                 const res = await fetch(`/api/messages?user1=sajid&user2=${activeChat}`);
                 const data = await res.json();
                 if (Array.isArray(data)) {
-                    // Check for new fireworks
-                    const latestFirework = [...data].reverse().find(m => m.type === "heart_firework");
-                    if (latestFirework && latestFirework.id !== lastFireworkId.current) {
-                        lastFireworkId.current = latestFirework.id;
-                        triggerFirework(latestFirework.text);
-                    }
-
-                    setMessages((prev) => {
-                        const localMessages = prev[activeChat] || [];
-                        const messageMap = new Map();
-
-                        // Add local messages first to keep them if server is slow or fails
-                        localMessages.forEach(m => messageMap.set(m.id, m));
-
-                        // Overwrite with server messages (source of truth)
-                        data.forEach(m => messageMap.set(m.id, m));
-
-                        const merged = Array.from(messageMap.values()).sort((a, b) => {
-                            // Sort by createdAt primarily, fallback to ID timestamp
-                            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : parseFloat(a.id);
-                            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : parseFloat(b.id);
-                            return timeA - timeB;
-                        });
-
-                        return { ...prev, [activeChat]: merged };
-                    });
+                    setMessages((prev) => ({ ...prev, [activeChat]: data }));
                 }
             } catch (e) {
-                console.error("Failed to fetch messages", e);
+                console.error("Initial fetch failed", e);
             }
         };
-        fetchMessages();
+        fetchInitialMessages();
 
-        const interval = setInterval(fetchMessages, 2000);
-        return () => clearInterval(interval);
+        const pusher = getPusherClient();
+        if (!pusher || !process.env.NEXT_PUBLIC_PUSHER_KEY) return;
+
+        const sorted = ["sajid", activeChat].sort();
+        const chatKey = `${sorted[0]}-${sorted[1]}`;
+        const channel = pusher.subscribe(chatKey);
+
+        channel.bind("new-message", (newMessage: any) => {
+            // Check for fireworks in new messages
+            if (newMessage.type === "heart_firework" && newMessage.id !== lastFireworkId.current) {
+                lastFireworkId.current = newMessage.id;
+                triggerFirework(newMessage.text);
+            }
+
+            setMessages((prev) => {
+                const chatMessages = prev[activeChat] || [];
+                // If message exists (sent by us), update it; otherwise append
+                const exists = chatMessages.find(m => m.id === newMessage.id);
+                if (exists) {
+                    return {
+                        ...prev,
+                        [activeChat]: chatMessages.map(m => m.id === newMessage.id ? newMessage : m)
+                    };
+                }
+                return {
+                    ...prev,
+                    [activeChat]: [...chatMessages, newMessage]
+                };
+            });
+        });
+
+        channel.bind("clear-chat", () => {
+            setMessages(prev => ({ ...prev, [activeChat]: [] }));
+        });
+
+        return () => {
+            pusher.unsubscribe(chatKey);
+        };
     }, [activeChat]);
 
     const triggerFirework = (text: string) => {
