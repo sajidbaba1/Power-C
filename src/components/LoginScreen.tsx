@@ -69,11 +69,11 @@ export default function LoginScreen({ onLogin }: LoginProps) {
                                     onClick={() => {
                                         setSelectedRole(user.role);
                                         setError("");
-                                        // Auto-fill password
+                                        // Auto-fill password for everyone EXCEPT admin
                                         const passwords: Record<string, string> = {
                                             sajid: "sajid123",
                                             nasywa: "nasywa123",
-                                            admin: "admin123"
+                                            admin: "" // Don't show admin password
                                         };
                                         setPassword(passwords[user.role]);
                                     }}
@@ -87,7 +87,9 @@ export default function LoginScreen({ onLogin }: LoginProps) {
                                     </div>
                                     <div className="text-left flex-1">
                                         <p className="font-semibold">{user.name}</p>
-                                        <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                                        <p className="text-xs text-muted-foreground capitalize">
+                                            {user.role} {user.role !== 'admin' && `(Password: ${user.role}123)`}
+                                        </p>
                                     </div>
                                     {selectedRole === user.role && (
                                         <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">

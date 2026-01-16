@@ -347,17 +347,22 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                             <p className="text-[10px] lg:text-xs text-green-500">Online</p>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setShowWordBucket(!showWordBucket)}
-                        className="lg:hidden p-2 hover:bg-muted rounded-lg transition-colors relative shrink-0"
-                    >
-                        <BookOpen className="w-5 h-5" />
-                        {learnedWords.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                                {learnedWords.length}
-                            </span>
-                        )}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={handleClearChat} className="p-2 hover:bg-destructive/10 rounded-lg transition-colors group" title="Clear Chat">
+                            <Trash2 className="w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground group-hover:text-destructive" />
+                        </button>
+                        <button
+                            onClick={() => setShowWordBucket(!showWordBucket)}
+                            className="lg:hidden p-2 hover:bg-muted rounded-lg transition-colors relative shrink-0"
+                        >
+                            <BookOpen className="w-5 h-5" />
+                            {learnedWords.length > 0 && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                                    {learnedWords.length}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </header>
 
                 {/* Messages */}
@@ -382,7 +387,23 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                                     "p-3 lg:p-4 rounded-2xl glass transition-all",
                                     msg.sender === "sajid" ? "bg-primary/20 rounded-tr-none" : "bg-muted/50 rounded-tl-none"
                                 )}>
-                                    <p className="text-sm font-medium break-words">{msg.text}</p>
+                                    <div className="text-sm lg:text-base break-words">
+                                        {msg.imageUrl ? (
+                                            <img src={msg.imageUrl} alt="Sent" className="max-w-full rounded-lg mb-2 shadow-lg cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                                        ) : msg.isHeart ? (
+                                            <motion.div
+                                                animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
+                                                transition={{ repeat: Infinity, duration: 1 }}
+                                                className="text-4xl"
+                                            >
+                                                ❤️
+                                            </motion.div>
+                                        ) : msg.isSticker ? (
+                                            <div className="text-5xl">{msg.text}</div>
+                                        ) : (
+                                            msg.text
+                                        )}
+                                    </div>
                                     {msg.status === "sending" && (
                                         <div className="mt-1 flex items-center gap-1">
                                             <div className="w-1 h-1 bg-primary rounded-full animate-bounce" />

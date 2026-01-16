@@ -35,6 +35,8 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
 
     useEffect(() => {
         fetchKeys();
+        const savedTheme = localStorage.getItem('power-couple-theme');
+        if (savedTheme) setPalette(savedTheme);
     }, []);
 
     const fetchKeys = async () => {
@@ -48,33 +50,50 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     };
 
     const handleAddKey = async () => {
-        if (!newKey) return;
+        if (!newKey.trim()) {
+            alert("Please enter a valid API key");
+            return;
+        }
         setIsLoading(true);
         try {
-            await fetch("/api/admin/keys", {
+            const res = await fetch("/api/admin/keys", {
                 method: "POST",
-                body: JSON.stringify({ key: newKey }),
+                body: JSON.stringify({ key: newKey.trim() }),
                 headers: { "Content-Type": "application/json" }
             });
-            setNewKey("");
-            fetchKeys();
+            if (res.ok) {
+                alert("API Key added successfully!");
+                setNewKey("");
+                fetchKeys();
+            } else {
+                const data = await res.json();
+                alert(`Error: ${data.error || "Failed to add key"}`);
+            }
         } catch (e) {
             console.error(e);
+            alert("Failed to connect to server");
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleDeleteKey = async (id: string) => {
+        if (!confirm("Delete this API key?")) return;
         try {
-            await fetch("/api/admin/keys", {
+            const res = await fetch("/api/admin/keys", {
                 method: "DELETE",
                 body: JSON.stringify({ id }),
                 headers: { "Content-Type": "application/json" }
             });
-            fetchKeys();
+            if (res.ok) {
+                alert("API Key deleted");
+                fetchKeys();
+            } else {
+                alert("Failed to delete key");
+            }
         } catch (e) {
             console.error(e);
+            alert("Error deleting key");
         }
     };
 
@@ -86,8 +105,18 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     ];
 
     const setPalette = (hsl: string) => {
+        // Apply to both html and body to be sure
         document.documentElement.style.setProperty('--primary', hsl);
         document.documentElement.style.setProperty('--ring', hsl);
+        document.body.style.setProperty('--primary', hsl);
+        document.body.style.setProperty('--ring', hsl);
+
+        // Also update any specific theme-provider wrappers if needed
+        const wrappers = document.querySelectorAll('[data-theme]');
+        wrappers.forEach(el => (el as HTMLElement).style.setProperty('--primary', hsl));
+
+        localStorage.setItem('power-couple-theme', hsl);
+        console.log("Theme updated and saved:", hsl);
     };
 
     const stats = [

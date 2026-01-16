@@ -2,68 +2,53 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getPrisma } from "./db";
 
 export async function getGeminiModel() {
-    let apiKey = "";
+    let allKeys: string[] = [];
 
-    // Try to get from Env keys first
+    // 1. Collect from Env keys
     const envKeys = process.env.GEMINI_API_KEYS?.split(",") || [];
-    if (envKeys.length > 0) {
-        // Use a simple rotation based on current time/usage
-        const index = Math.floor(Date.now() / 1000) % envKeys.length;
-        apiKey = envKeys[index];
-        console.log(`Using Gemini API Key index ${index} from environment variable`);
-    }
+    allKeys = [...allKeys, ...envKeys.map(k => k.trim()).filter(Boolean)];
 
-    // If no env key, try DB (only if configured and NOT the local proxy protocol which hangs)
+    // 2. Collect from DB (with fallback/timeout)
     const dbUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
     const isLocalProxy = dbUrl?.startsWith("prisma+postgres://");
     const hasDb = !!dbUrl && !isLocalProxy;
 
-    if (!apiKey && hasDb) {
+    if (hasDb) {
         try {
-            console.log("Attempting to fetch API keys from DB (with timeout)...");
+            console.log("Fetching additional keys from DB...");
             const prisma = getPrisma();
-
-            // Create a timeout promise
             const timeout = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error("DB Timeout")), 3000)
             );
 
-            // Race the DB query against the timeout
             const dbKeys = await Promise.race([
                 prisma.apiKey.findMany({
                     where: { status: "active" },
-                    orderBy: { updatedAt: "asc" }
                 }),
                 timeout
             ]) as any[];
 
-            if (dbKeys.length > 0) {
-                const selected = dbKeys[0];
-                apiKey = selected.key;
-                console.log("Using Gemini API Key from Database");
-
-                // Update usage and timestamp back in DB (async, no await)
-                const prisma = getPrisma();
-                prisma.apiKey.update({
-                    where: { id: selected.id },
-                    data: {
-                        usage: { increment: 1 },
-                        updatedAt: new Date()
-                    }
-                }).catch((err: any) => console.error("Prisma update error:", err));
+            if (dbKeys && Array.isArray(dbKeys)) {
+                allKeys = [...allKeys, ...dbKeys.map(k => k.key)];
             }
         } catch (e: any) {
-            console.warn(`DB not accessible for API keys (${e.message}), skipping.`);
+            console.warn(`DB Keys fetch failed: ${e.message}`);
         }
     }
 
-    // Final fallback to hardcoded (be careful with this in production!)
-    if (!apiKey) {
+    // 3. Select a key (Rotation)
+    let apiKey = "";
+    if (allKeys.length > 0) {
+        const index = Math.floor(Date.now() / 1000) % allKeys.length;
+        apiKey = allKeys[index];
+        console.log(`Using Gemini API Key index ${index} from total pool of ${allKeys.length} keys`);
+    } else {
+        // Final fallback
         apiKey = "AIzaSyBWKccHpqzoNqaUsyBvv6DuECplbkho_2s";
         console.log("Using hardcoded Gemini API Key fallback");
     }
 
-    if (!apiKey) throw new Error("No Gemini API keys found in any source");
+    if (!apiKey) throw new Error("No Gemini API keys found");
 
     const genAI = new GoogleGenerativeAI(apiKey);
     return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });

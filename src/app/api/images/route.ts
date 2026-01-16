@@ -45,20 +45,17 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const user = searchParams.get("user");
 
-        if (!user) {
-            return NextResponse.json({ error: "User required" }, { status: 400 });
-        }
-
         const prisma = getPrisma();
 
-        // Get images where user is sender or receiver
+        const where = user ? {
+            OR: [
+                { sender: user },
+                { receiver: user },
+            ],
+        } : {};
+
         const images = await prisma.image.findMany({
-            where: {
-                OR: [
-                    { sender: user },
-                    { receiver: user },
-                ],
-            },
+            where,
             orderBy: {
                 createdAt: "desc",
             },
