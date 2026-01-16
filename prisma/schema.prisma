@@ -28,3 +28,14 @@ model Message {
   wordBreakdown    Json?    // Array of {word, hindi, meaning}
   createdAt        DateTime @default(now())
 }
+
+model Image {
+  id          String   @id @default(cuid())
+  cloudinaryId String  // Cloudinary public_id
+  url         String   // Cloudinary secure_url
+  sender      String   // sajid or nasywa
+  receiver    String   // sajid, nasywa, or admin
+  viewType    String   @default("permanent") // "one-time" or "permanent"
+  viewed      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}

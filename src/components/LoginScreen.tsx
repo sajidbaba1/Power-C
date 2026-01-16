@@ -126,15 +126,6 @@ export default function LoginScreen({ onLogin }: LoginProps) {
                             Login
                         </button>
                     </div>
-
-                    <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border">
-                        <p className="text-xs text-muted-foreground text-center mb-2">Demo Credentials:</p>
-                        <div className="space-y-1 text-xs font-mono">
-                            <p>Sajid: <span className="text-primary">sajid123</span></p>
-                            <p>Nasywa: <span className="text-primary">nasywa123</span></p>
-                            <p>Admin: <span className="text-primary">admin123</span></p>
-                        </div>
-                    </div>
                 </div>
             </motion.div>
         </div>
