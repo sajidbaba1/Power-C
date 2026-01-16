@@ -35,15 +35,28 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
     const [isPlaying, setIsPlaying] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [newUrl, setNewUrl] = useState("");
+    const [newTitle, setNewTitle] = useState("");
     const [newEffect, setNewEffect] = useState<EffectType>("none");
     const [volume, setVolume] = useState(0.5);
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [hasInteracted, setHasInteracted] = useState(false);
 
     useEffect(() => setMounted(true), []);
 
-    // Sync state via Pusher
+    // Interaction Listener for Safe Autoplay
+    useEffect(() => {
+        const handleInteraction = () => setHasInteracted(true);
+        window.addEventListener('click', handleInteraction);
+        window.addEventListener('keydown', handleInteraction);
+        return () => {
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('keydown', handleInteraction);
+        };
+    }, []);
+
+    // Sync state via Pusher & Fetch Data
     useEffect(() => {
         if (!pusherClient || !activeChat) return;
 
@@ -202,17 +215,16 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                 <div className="fixed bottom-0 right-0 w-px h-px overflow-hidden z-[9999]">
                     <ReactPlayer
                         url={playlist[currentIndex]?.url}
-                        playing={isPlaying}
+                        playing={isPlaying && hasInteracted}
                         volume={volume}
                         muted={false}
                         onEnded={handleNext}
                         onReady={() => console.log("Player Ready")}
                         onStart={() => console.log("Player Started")}
                         onPlay={() => console.log("Player Playing")}
-                        onError={(e: any) => console.error("ReactPlayer Error:", e)}
+                        onError={(e: any) => console.log("Player Status:", e.target?.error || "Error")}
                         width="1px"
                         height="1px"
-                        style={{ position: 'absolute', top: '-1000px', left: '-1000px', pointerEvents: 'none' }}
                         playsinline={true}
                         config={{
                             youtube: {
@@ -221,6 +233,14 @@ export default function MusicPlayer({ activeChat, pusherClient, currentEffect, o
                         }}
                     />
                 </div>
+
+                {/* Audio Blocked Prompt */}
+                {isPlaying && !hasInteracted && (
+                    <div className="fixed bottom-20 left-4 z-[300] bg-pink-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce cursor-pointer flex items-center gap-2 font-bold text-xs" onClick={() => setHasInteracted(true)}>
+                        <Play className="w-3 h-3 fill-current" /> Tap to Join Music 🎵
+                    </div>
+                )}
+
 
                 {/* Expanded Player Interface */}
                 <AnimatePresence>
