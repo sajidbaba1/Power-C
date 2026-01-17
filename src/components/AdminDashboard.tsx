@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { LOCAL_SONGS } from "@/lib/songs";
 import { getPusherClient } from "@/lib/pusher";
@@ -28,7 +28,8 @@ import {
     CloudSnow,
     CloudRain,
     Zap,
-    Music
+    Music,
+    Send
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -58,15 +59,126 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         nasywaVolume: 100,
         currentIndex: 0
     });
+    const [isStopEffectsEnabled, setIsStopEffectsEnabled] = useState(false);
+    const [activeAdminChat, setActiveAdminChat] = useState<"sajid" | "nasywa" | null>(null);
+    const [adminMessages, setAdminMessages] = useState<Record<string, any[]>>({ sajid: [], nasywa: [] });
+    const [adminInputValue, setAdminInputValue] = useState("");
+    const [isTyping, setIsTyping] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Memoized callback to prevent infinite loops in MusicPlayer
+    const handlePlayingChange = useCallback((isPlaying: boolean) => {
+        setVibeSettings(prev => ({ ...prev, isPlaying }));
+    }, []);
 
     useEffect(() => {
         fetchKeys();
         fetchLoginHistory();
+        fetchGlobalSettings();
         const savedTheme = localStorage.getItem('power-couple-theme');
         if (savedTheme) {
             // Palette logic if needed
         }
+
+        // Pusher listeners for admin chat
+        const channels = ["admin-sajid", "admin-nasywa"];
+        channels.forEach(channelName => {
+            const channel = pusher.subscribe(channelName);
+            channel.bind("new-message", (msg: any) => {
+                const user = channelName.split("-")[1];
+                setAdminMessages(prev => ({
+                    ...prev,
+                    [user]: [...(prev[user] || []), msg]
+                }));
+                scrollToBottom();
+            });
+        });
+
+        return () => {
+            channels.forEach(ch => pusher.unsubscribe(ch));
+        };
     }, []);
+
+    useEffect(() => {
+        if (activeAdminChat) {
+            fetchAdminMessages(activeAdminChat);
+        }
+    }, [activeAdminChat]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const fetchAdminMessages = async (user: string) => {
+        try {
+            const res = await fetch(`/api/messages?user1=admin&user2=${user}`);
+            const data = await res.json();
+            setAdminMessages(prev => ({ ...prev, [user]: data }));
+            setTimeout(scrollToBottom, 100);
+        } catch (e) {
+            console.error("Failed to fetch messages", e);
+        }
+    };
+
+    const handleAdminSend = async () => {
+        if (!adminInputValue.trim() || !activeAdminChat) return;
+
+        const msgId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const newMessage = {
+            id: msgId,
+            text: adminInputValue,
+            sender: "admin",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: "sent"
+        };
+
+        setAdminMessages(prev => ({
+            ...prev,
+            [activeAdminChat]: [...(prev[activeAdminChat] || []), newMessage]
+        }));
+        setAdminInputValue("");
+        setTimeout(scrollToBottom, 100);
+
+        try {
+            await fetch("/api/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user1: "admin",
+                    user2: activeAdminChat,
+                    message: newMessage
+                })
+            });
+        } catch (e) {
+            console.error("Failed to send message", e);
+        }
+    };
+
+    const fetchGlobalSettings = async () => {
+        try {
+            const res = await fetch("/api/admin/settings");
+            const data = await res.json();
+            if (data && typeof data.stopEffects === "boolean") {
+                setIsStopEffectsEnabled(data.stopEffects);
+            }
+        } catch (e) {
+            console.error("Failed to fetch global settings", e);
+        }
+    };
+
+    const toggleGlobalEffects = async () => {
+        const newValue = !isStopEffectsEnabled;
+        setIsStopEffectsEnabled(newValue);
+        try {
+            await fetch("/api/admin/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ stopEffects: newValue, updatedBy: "admin" })
+            });
+        } catch (e) {
+            console.error("Failed to update global settings", e);
+        }
+    };
 
     const fetchLoginHistory = async () => {
         try {
@@ -215,7 +327,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
 
     return (
         <div className="flex h-screen bg-background overflow-hidden relative">
-            <BackgroundEffects effect={backgroundEffect} />
+            <BackgroundEffects effect={isStopEffectsEnabled ? "none" : backgroundEffect} />
 
 
 
@@ -353,6 +465,21 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                             <Zap className="w-5 h-5 text-pink-500" />
                             <span className="font-semibold text-sm">Vibe Controller</span>
                         </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab("chat");
+                                setShowSidebar(false);
+                            }}
+                            className={cn(
+                                "w-full p-3 lg:p-4 rounded-2xl transition-all flex items-center gap-3",
+                                activeTab === "chat"
+                                    ? "bg-blue-500/10 border-2 border-blue-500"
+                                    : "glass border border-white/5 hover:border-white/20"
+                            )}
+                        >
+                            <MessageSquare className="w-5 h-5 text-blue-500" />
+                            <span className="font-semibold text-sm">Support Chat</span>
+                        </button>
                     </div>
 
                     <div className="mt-auto p-4 border-t border-white/5">
@@ -361,7 +488,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                             pusherClient={pusher}
                             currentEffect={backgroundEffect}
                             onEffectChange={setBackgroundEffect}
-                            onPlayingChange={(isPlaying) => setVibeSettings(prev => ({ ...prev, isPlaying }))}
+                            onPlayingChange={handlePlayingChange}
                             userRole="admin"
                             inline={true}
                         />
@@ -407,9 +534,40 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                             })}
                         </div>
 
-                        <div className="p-8 rounded-3xl bg-indigo-500/5 border border-indigo-500/10">
-                            <h2 className="text-xl font-semibold mb-6">Database Status</h2>
-                            <DbDiagnostic />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="p-8 rounded-3xl bg-indigo-500/5 border border-indigo-500/10">
+                                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                                    <Database className="w-5 h-5 text-indigo-500" />
+                                    Database Status
+                                </h2>
+                                <DbDiagnostic />
+                            </div>
+
+                            <div className="p-8 rounded-3xl bg-rose-500/5 border border-rose-500/10">
+                                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                                    <Zap className="w-5 h-5 text-rose-500" />
+                                    System Performance
+                                </h2>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-4 rounded-2xl glass border border-white/5">
+                                        <div>
+                                            <p className="font-bold text-sm">Kill Background Effects</p>
+                                            <p className="text-xs text-muted-foreground">Instantly stop rain, snow, and hearts</p>
+                                        </div>
+                                        <button
+                                            onClick={toggleGlobalEffects}
+                                            className={cn(
+                                                "px-4 py-2 rounded-xl text-xs font-black transition-all",
+                                                isStopEffectsEnabled
+                                                    ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
+                                                    : "bg-white/10 hover:bg-white/20 text-muted-foreground"
+                                            )}
+                                        >
+                                            {isStopEffectsEnabled ? "EFFECTS: OFF" : "EFFECTS: ON"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="p-8 rounded-3xl glass border border-white/5">
@@ -534,8 +692,8 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {[
-                                { name: "Sajid", role: "User", color: "from-blue-500 to-cyan-500", status: "Active" },
-                                { name: "Nasywa", role: "User", color: "from-pink-500 to-rose-500", status: "Active" }
+                                { name: "Sajid", role: "User", color: "from-blue-500 to-cyan-500", status: "Active", id: "sajid" },
+                                { name: "Nasywa", role: "User", color: "from-pink-500 to-rose-500", status: "Active", id: "nasywa" }
                             ].map((user) => (
                                 <div key={user.name} className="p-6 rounded-2xl glass border border-white/5">
                                     <div className="flex items-center gap-4 mb-4">
@@ -553,7 +711,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                                     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                                         <div>
                                             <p className="text-xs text-muted-foreground mb-1">Messages</p>
-                                            <p className="font-semibold">0</p>
+                                            <p className="font-semibold">{adminMessages[user.id]?.length || 0}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-muted-foreground mb-1">Last Active</p>
@@ -573,6 +731,93 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                         </div>
 
                         <MediaGallery />
+                    </div>
+                )}
+                {activeTab === "chat" && (
+                    <div className="h-[calc(100vh-200px)] flex flex-col gap-6">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold mb-2">Support Chat</h1>
+                                <p className="text-muted-foreground">Interact with system users in real-time</p>
+                            </div>
+                            <div className="flex gap-2 bg-muted/50 p-1 rounded-2xl border border-border self-start">
+                                {["sajid", "nasywa"].map((u) => (
+                                    <button
+                                        key={u}
+                                        onClick={() => setActiveAdminChat(u as any)}
+                                        className={cn(
+                                            "px-6 py-2 rounded-xl text-sm font-bold capitalize transition-all",
+                                            activeAdminChat === u ? "bg-primary text-primary-foreground shadow-lg" : "hover:bg-muted"
+                                        )}
+                                    >
+                                        {u}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {!activeAdminChat ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-muted/20 border-2 border-dashed border-border rounded-[2.5rem]">
+                                <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
+                                <p className="text-lg font-medium">Select a user to start chatting</p>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col glass rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl min-h-0">
+                                <div className="p-6 border-b border-white/5 bg-white/5 flex items-center gap-3 shrink-0">
+                                    <div className={cn(
+                                        "w-3 h-3 rounded-full animate-pulse",
+                                        activeAdminChat === "sajid" ? "bg-blue-500" : "bg-pink-500"
+                                    )} />
+                                    <h2 className="font-bold capitalize">Chat with {activeAdminChat}</h2>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
+                                    {adminMessages[activeAdminChat]?.map((msg) => (
+                                        <div
+                                            key={msg.id}
+                                            className={cn(
+                                                "flex flex-col gap-1 max-w-[80%]",
+                                                msg.sender === "admin" ? "ml-auto items-end" : "mr-auto items-start"
+                                            )}
+                                        >
+                                            {msg.parentId && (
+                                                <div className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1">
+                                                    <RotateCcw className="w-2.5 h-2.5" />
+                                                    Replied to: {adminMessages[activeAdminChat].find(m => m.id === msg.parentId)?.text?.substring(0, 20)}...
+                                                </div>
+                                            )}
+                                            <div className={cn(
+                                                "p-4 rounded-2xl text-sm lg:text-base",
+                                                msg.sender === "admin"
+                                                    ? "bg-primary text-primary-foreground rounded-tr-none"
+                                                    : "glass border border-white/10 rounded-tl-none"
+                                            )}>
+                                                {msg.text}
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground px-2">{msg.timestamp}</span>
+                                        </div>
+                                    ))}
+                                    <div ref={messagesEndRef} />
+                                </div>
+
+                                <div className="p-6 bg-white/5 border-t border-white/5 flex gap-4 shrink-0">
+                                    <input
+                                        type="text"
+                                        value={adminInputValue}
+                                        onChange={(e) => setAdminInputValue(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && handleAdminSend()}
+                                        placeholder={`Message ${activeAdminChat}...`}
+                                        className="flex-1 bg-muted/50 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-primary/50 text-sm lg:text-base"
+                                    />
+                                    <button
+                                        onClick={handleAdminSend}
+                                        className="bg-primary text-primary-foreground p-4 rounded-2xl hover:scale-105 transition-transform shadow-lg shadow-primary/20"
+                                    >
+                                        <Send className="w-6 h-6" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
                 {activeTab === "login-history" && (
@@ -637,6 +882,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                         </div>
                     </div>
                 )}
+
                 {activeTab === "vibe-controller" && (
                     <div className="space-y-8 max-w-4xl mx-auto">
                         <motion.div
@@ -756,8 +1002,8 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                         </motion.div>
                     </div>
                 )}
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }
 

@@ -1,25 +1,21 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+// Force fresh client in dev to avoid stale model issues
+let cachedClient: PrismaClient | null = null;
 
 export const getPrisma = (): PrismaClient => {
-    if (globalForPrisma.prisma) {
-        return globalForPrisma.prisma;
-    }
-
     const url = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
 
     if (!url) {
-        console.warn("No DATABASE_URL found. Database features will be non-functional.");
         const createProxy = (path: string): any => {
             return new Proxy(() => { }, {
                 get: (target, prop) => {
                     if (prop === 'then') return undefined;
                     return createProxy(`${path}.${String(prop)}`);
                 },
-                apply: (target, thisArg, args) => {
+                apply: () => {
                     throw new Error(`Database connection not configured. Please check your DATABASE_URL environment variable.`);
                 }
             });
@@ -27,18 +23,27 @@ export const getPrisma = (): PrismaClient => {
         return createProxy("prisma") as unknown as PrismaClient;
     }
 
-    // Create a connection pool
-    const pool = new Pool({ connectionString: url });
-    const adapter = new PrismaPg(pool);
-
-    const client = new PrismaClient({
-        adapter,
-        log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-    });
-
-    if (process.env.NODE_ENV !== "production") {
-        globalForPrisma.prisma = client;
+    // In development, always create fresh client to pick up schema changes
+    if (process.env.NODE_ENV === "development") {
+        const pool = new Pool({ connectionString: url });
+        const adapter = new PrismaPg(pool);
+        const client = new PrismaClient({
+            adapter,
+            log: ["error", "warn"],
+        });
+        console.log("🔧 DEV: Fresh Prisma client created with models:", Object.keys(client).filter(k => !k.startsWith("_") && !k.startsWith("$")));
+        return client;
     }
 
-    return client;
+    // Production: use cached client
+    if (!cachedClient) {
+        const pool = new Pool({ connectionString: url });
+        const adapter = new PrismaPg(pool);
+        cachedClient = new PrismaClient({
+            adapter,
+            log: ["error"],
+        });
+    }
+
+    return cachedClient;
 };

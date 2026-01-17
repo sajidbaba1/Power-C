@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus } from "lucide-react";
+import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus, RotateCcw } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import confetti from "canvas-confetti";
@@ -12,6 +12,7 @@ import StreakOverlay from "@/components/StreakOverlay";
 import MusicPlayer from './MusicPlayer';
 import BackgroundEffects, { EffectType } from './BackgroundEffects';
 import SlideshowBackground from './SlideshowBackground';
+import PartnerActivities from './PartnerActivities';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -26,6 +27,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const pusher = getPusherClient();
     const [activeChat, setActiveChat] = useState<"sajid" | "admin">("sajid");
     const [backgroundEffect, setBackgroundEffect] = useState<EffectType>("none");
+    const [isStopEffectsEnabled, setIsStopEffectsEnabled] = useState(false);
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
     const [messages, setMessages] = useState<Record<string, any[]>>({
         sajid: [],
@@ -54,6 +56,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const isTypingRef = useRef(false);
     const [showRocket, setShowRocket] = useState(false);
     const [chatWallpaper, setChatWallpaper] = useState<string | null>(null);
+    const [showActivities, setShowActivities] = useState(false);
     const [showLoveWall, setShowLoveWall] = useState(false);
     const [showMilestones, setShowMilestones] = useState(false);
     const [loveNotes, setLoveNotes] = useState<any[]>([]);
@@ -73,6 +76,9 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [showMap, setShowMap] = useState(false);
     const [distance, setDistance] = useState<number | null>(null);
     const [showGratitudePrompt, setShowGratitudePrompt] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<any>(null);
+    const [showReactionsFor, setShowReactionsFor] = useState<string | null>(null);
+    const [activeThreads, setActiveThreads] = useState<Record<string, any[]>>({});
 
     const isUnlocked = (msg: any) => {
         if (msg.type !== "secret" || msg.sender === "nasywa") return true;
@@ -115,6 +121,17 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                 console.error("Failed to fetch profiles", e);
             }
         };
+        const fetchGlobalSettings = async () => {
+            try {
+                const res = await fetch("/api/admin/settings");
+                const data = await res.json();
+                if (data && typeof data.stopEffects === "boolean") {
+                    setIsStopEffectsEnabled(data.stopEffects);
+                }
+            } catch (e) {
+                console.error("Failed to fetch global settings", e);
+            }
+        };
         const fetchLoveNotes = async () => {
             const res = await fetch("/api/lovenotes");
             const data = await res.json();
@@ -137,6 +154,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         fetchLoveNotes();
         fetchMilestones();
         recordLogin();
+        fetchGlobalSettings();
 
         // Fetch streak data
         const fetchStreak = async () => {
@@ -418,6 +436,42 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             });
         });
 
+        channel.bind("global-settings-update", (data: any) => {
+            if (data && typeof data.stopEffects === "boolean") {
+                setIsStopEffectsEnabled(data.stopEffects);
+            }
+        });
+
+        channel.bind("global-settings-update", (data: any) => {
+            if (data && typeof data.stopEffects === "boolean") {
+                setIsStopEffectsEnabled(data.stopEffects);
+            }
+        });
+
+        channel.bind("message-reaction", (data: { messageId: string, reactions: any[] }) => {
+            setMessages(prev => {
+                const chatMessages = prev[activeChat] || [];
+                return {
+                    ...prev,
+                    [activeChat]: chatMessages.map(m =>
+                        m.id === data.messageId ? { ...m, reactions: data.reactions } : m
+                    )
+                };
+            });
+        });
+
+        channel.bind("message-pin", (data: { messageId: string, isPinned: boolean }) => {
+            setMessages(prev => {
+                const chatMessages = prev[activeChat] || [];
+                return {
+                    ...prev,
+                    [activeChat]: chatMessages.map(m =>
+                        m.id === data.messageId ? { ...m, isPinned: data.isPinned } : m
+                    )
+                };
+            });
+        });
+
         channel.bind("messages-seen", (data: { messageIds: string[] }) => {
             setMessages((prev) => {
                 const chatMessages = prev[activeChat] || [];
@@ -696,8 +750,9 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             status: "sending",
             isSticker: isSticker,
             isHeart: text === "❤️" || text === "💖",
-            type: isSecretMode ? "secret" : "normal",
-            unlockAt: isSecretMode ? secretUnlockTime : null
+            type: isSecretMode ? "secret" : (isSticker ? "sticker" : "normal"),
+            unlockAt: isSecretMode ? secretUnlockTime : null,
+            parentId: replyingTo?.id || null
         };
 
         setMessages((prev) => ({
@@ -705,6 +760,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             [activeChat]: [...prev[activeChat], userMessage]
         }));
         setInputValue("");
+        setReplyingTo(null);
         if (textareaRef.current) {
             textareaRef.current.style.height = '40px';
         }
@@ -811,7 +867,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     return (
         <div className="flex h-[100dvh] bg-background overflow-hidden relative">
             <SlideshowBackground isPlaying={isMusicPlaying} />
-            <BackgroundEffects effect={backgroundEffect} />
+            <BackgroundEffects effect={isStopEffectsEnabled ? "none" : backgroundEffect} />
             {/* Mobile Overlay */}
             {(showSidebar || showWordBucket) && (
                 <div
@@ -906,6 +962,13 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                             Track
                         </button>
                     </div>
+                    <button
+                        onClick={() => setShowActivities(true)}
+                        className="w-full mt-2 flex items-center justify-center gap-2 bg-gradient-to-br from-purple-500 to-indigo-500 text-white rounded-xl py-2.5 text-[10px] font-black uppercase tracking-wider shadow-lg shadow-purple-500/20 hover:scale-[1.02] transition-all"
+                    >
+                        <Stars className="w-3 h-3" />
+                        What Partner is Doing
+                    </button>
 
                     {distance !== null && (
                         <div className="mt-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
@@ -1052,14 +1115,69 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                         <User className="w-4 h-4 text-white" />
                                     )}
                                 </div>
-                                <div className={cn("flex flex-col gap-1", msg.sender === "nasywa" ? "items-end" : "items-start")}>
-                                    <div className={cn(
-                                        "p-3 lg:p-4 rounded-2xl glass transition-all",
-                                        msg.sender === "nasywa" ? "bg-primary/20 rounded-tr-none" : "bg-muted/50 rounded-tl-none"
-                                    )}>
+                                <div className={cn("flex flex-col gap-1 relative", msg.sender === "nasywa" ? "items-end" : "items-start")}>
+                                    <div
+                                        className={cn(
+                                            "p-3 lg:p-4 rounded-2xl glass transition-all relative group/msg",
+                                            msg.sender === "nasywa" ? "bg-primary/20 rounded-tr-none" : "bg-muted/50 rounded-tl-none",
+                                            msg.isPinned && "border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
+                                        )}
+                                    >
+                                        {msg.parentId && (
+                                            <div className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1">
+                                                <RotateCcw className="w-2.5 h-2.5" />
+                                                Replied to: {messages[activeChat].find(m => m.id === msg.parentId)?.text?.substring(0, 20)}...
+                                            </div>
+                                        )}
+                                        {msg.isPinned && (
+                                            <div className="absolute -top-2 -left-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
+                                                <MapPin className="w-3 h-3 text-white" />
+                                            </div>
+                                        )}
+
+                                        {/* Action Menu (Hover) */}
+                                        <div className={cn(
+                                            "absolute bottom-full mb-2 flex gap-1 bg-card/90 backdrop-blur-md p-1 rounded-xl border border-white/10 opacity-0 group-hover/msg:opacity-100 transition-opacity z-10",
+                                            msg.sender === "nasywa" ? "right-0" : "left-0"
+                                        )}>
+                                            {["❤️", "😂", "😮", "🔥", "😢"].map(emoji => (
+                                                <button
+                                                    key={emoji}
+                                                    onClick={async () => {
+                                                        await fetch("/api/messages/react", {
+                                                            method: "POST",
+                                                            headers: { "Content-Type": "application/json" },
+                                                            body: JSON.stringify({ messageId: msg.id, emoji, user: "nasywa", chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}` })
+                                                        });
+                                                    }}
+                                                    className="hover:scale-125 transition-transform px-1"
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                            <div className="w-[1px] bg-white/10 mx-1" />
+                                            <button onClick={() => setReplyingTo(msg)} className="p-1 hover:text-primary transition-colors">
+                                                <RotateCcw className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    await fetch("/api/messages/pin", {
+                                                        method: "POST",
+                                                        headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify({ messageId: msg.id, isPinned: !msg.isPinned, chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}` })
+                                                    });
+                                                }}
+                                                className={cn("p-1 transition-colors", msg.isPinned ? "text-amber-500" : "hover:text-amber-500")}
+                                            >
+                                                <MapPin className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+
                                         <div className="text-sm lg:text-base break-words">
                                             {msg.imageUrl ? (
                                                 <img src={msg.imageUrl} alt="Sent" className="max-w-full rounded-lg mb-2 shadow-lg cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                                            ) : msg.type === "sticker" ? (
+                                                <div className="text-5xl">{msg.text}</div>
                                             ) : msg.type === "secret" && !isUnlocked(msg) ? (
                                                 <div className="flex flex-col items-center gap-2 py-4 px-8 opacity-50 select-none">
                                                     <Lock className="w-8 h-8 animate-pulse text-amber-500" />
@@ -1068,20 +1186,22 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                                         <span className="text-amber-500">Unlocks at {msg.unlockAt}</span>
                                                     </p>
                                                 </div>
-                                            ) : msg.isHeart ? (
-                                                <motion.div
-                                                    animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
-                                                    transition={{ repeat: Infinity, duration: 1 }}
-                                                    className="text-4xl"
-                                                >
-                                                    ❤️
-                                                </motion.div>
-                                            ) : msg.isSticker ? (
-                                                <div className="text-5xl">{msg.text}</div>
                                             ) : (
                                                 msg.text
                                             )}
                                         </div>
+
+                                        {/* Reactions Display */}
+                                        {msg.reactions && (msg.reactions as any[]).length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {(msg.reactions as any[]).map((r, i) => (
+                                                    <span key={i} className="text-[10px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                                                        {r.emoji}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
                                         {msg.status === "sending" && (
                                             <div className="mt-1 flex items-center gap-1">
                                                 <div className="w-1 h-1 bg-primary rounded-full animate-bounce" />
@@ -1101,15 +1221,30 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                                 )}
                                             </div>
                                         )}
-                                        {(msg.hindiTranslation || msg.translation) && (
-                                            <div className="mt-2 pt-2 border-t border-white/5">
-                                                <p className="text-xs text-indigo-300 italic">
-                                                    {msg.hindiTranslation || msg.translation}
-                                                </p>
+                                        {msg.translation && (
+                                            <div className="mt-2 pt-2 border-t border-white/10">
+                                                <div className="flex items-center gap-1 mb-1">
+                                                    <span className="text-[9px] uppercase tracking-wider text-orange-400 font-medium">🇮🇳 Hindi</span>
+                                                </div>
+                                                <p className="text-xs text-orange-300 italic">{msg.translation}</p>
+                                                {msg.wordBreakdown && (msg.wordBreakdown as any[]).length > 0 && (
+                                                    <details className="mt-1">
+                                                        <summary className="text-[9px] text-muted-foreground cursor-pointer hover:text-white transition">Word breakdown</summary>
+                                                        <div className="mt-1 flex flex-wrap gap-1">
+                                                            {(msg.wordBreakdown as any[]).slice(0, 5).map((w, i) => (
+                                                                <span key={i} className="text-[9px] bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded">
+                                                                    {w.word} → {w.hindi || w.translation}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </details>
+                                                )}
                                             </div>
                                         )}
                                     </div>
-                                    <span className="text-[10px] text-muted-foreground px-2">{msg.timestamp}</span>
+                                    <div className="flex items-center gap-2 px-2">
+                                        <span className="text-[10px] text-muted-foreground">{msg.timestamp}</span>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))
@@ -1134,6 +1269,21 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                 {/* Input */}
                 <div className="fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto p-3 lg:p-6 lg:pt-0 shrink-0 bg-background z-40">
                     <div className="flex flex-col gap-2">
+                        {replyingTo && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="glass border-l-4 border-l-primary p-3 rounded-2xl mb-2 flex items-center justify-between"
+                            >
+                                <div className="flex-1 overflow-hidden">
+                                    <p className="text-[10px] font-bold text-primary uppercase">Replying to {replyingTo.sender}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{replyingTo.text}</p>
+                                </div>
+                                <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-muted rounded-full">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </motion.div>
+                        )}
                         {showStickers && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
@@ -1822,6 +1972,12 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                     />
                 )}
             </AnimatePresence>
+            <PartnerActivities
+                isOpen={showActivities}
+                onClose={() => setShowActivities(false)}
+                userRole="nasywa"
+                pusherClient={pusher}
+            />
         </div>
     );
 }

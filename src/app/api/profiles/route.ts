@@ -53,6 +53,15 @@ export async function POST(req: Request) {
             create: { role, ...data }
         });
 
+        // Trigger email if mood is "Miss You" or "Missing You"
+        if (mood && (mood.toLowerCase().includes("miss you") || mood.toLowerCase().includes("missing you"))) {
+            const { sendMoodEmail } = await import("@/lib/email");
+            const recipientEmail = role === "nasywa" ? "ss2727303@gmail.com" : "nasywanazhifariyandi@gmail.com";
+            const partnerName = role === "nasywa" ? "Nasywa" : "Sajid";
+            // We fire and forget the email to not block the response
+            sendMoodEmail(recipientEmail, partnerName).catch(console.error);
+        }
+
         // Broadcast profile update
         const sorted = ["sajid", "nasywa"].sort();
         const chatKey = `${sorted[0]}-${sorted[1]}`;

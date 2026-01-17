@@ -20,62 +20,62 @@ model ApiKey {
 }
 
 model Profile {
-  id            String   @id @default(cuid())
-  role          String   @unique // sajid or nasywa
+  id            String    @id @default(cuid())
+  role          String    @unique // sajid or nasywa
   name          String
-  email         String?  // For event notifications
+  email         String? // For event notifications
   avatarUrl     String?
-  mood          String?  // Happy, Miss You, Tired, Need a Hug
+  mood          String? // Happy, Miss You, Tired, Need a Hug
   moodUpdatedAt DateTime?
   latitude      Float?
   longitude     Float?
   trackName     String?
   trackArtist   String?
   trackImage    String?
-  isPlaying     Boolean  @default(false)
+  isPlaying     Boolean   @default(false)
   ourSongUrl    String?
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime  @updatedAt
 }
 
 model Message {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   text             String
   translation      String?
   hindiTranslation String?
-  sender           String   // sajid or nasywa
-  receiver         String   // nasywa, sajid or admin
-  chatKey          String   // e.g., "nasywa-sajid"
-  status           String   @default("sent")
-  type             String   @default("text") // text, image, sticker, heart_firework, hug, kiss, audio, secret
-  wordBreakdown    Json?    // Array of {word, hindi, meaning}
+  sender           String // sajid or nasywa
+  receiver         String // nasywa, sajid or admin
+  chatKey          String // e.g., "nasywa-sajid"
+  status           String    @default("sent")
+  type             String    @default("text") // text, image, sticker, heart_firework, hug, kiss, audio, secret
+  wordBreakdown    Json? // Array of {word, hindi, meaning}
   imageUrl         String?
   audioUrl         String?
   unlockAt         DateTime? // For secret messages
-  isPinned         Boolean  @default(false)
-  parentId         String?  // For replies (stitching)
-  reactions        Json?    // Array of {emoji, user}
-  createdAt        DateTime @default(now())
+  isPinned         Boolean   @default(false)
+  parentId         String? // For replies (stitching)
+  reactions        Json? // Array of {emoji, user}
+  createdAt        DateTime  @default(now())
 }
 
 model ThreadComment {
   id        String   @id @default(cuid())
   messageId String
   content   String
-  author    String   // sajid or nasywa
+  author    String // sajid or nasywa
   createdAt DateTime @default(now())
 }
 
 model GlobalSettings {
-  id           String  @id @default("default")
-  stopEffects  Boolean @default(false)
-  updatedBy    String?
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default("default")
+  stopEffects Boolean  @default(false)
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
 }
 
 model JarNote {
   id        String   @id @default(cuid())
   content   String
-  author    String   // sajid or nasywa
+  author    String // sajid or nasywa
   createdAt DateTime @default(now())
 }
 
@@ -100,19 +100,19 @@ model Milestone {
 
 model LoginHistory {
   id        String   @id @default(cuid())
-  role      String   // sajid or nasywa
+  role      String // sajid or nasywa
   timestamp DateTime @default(now())
 }
 
 model Image {
-  id          String   @id @default(cuid())
-  cloudinaryId String  // Cloudinary public_id
-  url         String   // Cloudinary secure_url
-  sender      String   // sajid or nasywa
-  receiver    String   // sajid, nasywa, or admin
-  viewType    String   @default("permanent") // "one-time" or "permanent"
-  viewed      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  cloudinaryId String // Cloudinary public_id
+  url          String // Cloudinary secure_url
+  sender       String // sajid or nasywa
+  receiver     String // sajid, nasywa, or admin
+  viewType     String   @default("permanent") // "one-time" or "permanent"
+  viewed       Boolean  @default(false)
+  createdAt    DateTime @default(now())
 }
 
 model ChatActivity {
@@ -134,17 +134,18 @@ model PlaylistSong {
   order     Int      @default(0)
   createdAt DateTime @default(now())
 }
+
 model Activity {
-  id          String   @id @default(cuid())
-  text        String   @db.Text
-  imageUrl    String?  @db.Text
-  sender      String   // 'sajid' or 'nasywa'
-  status      String   @default("pending") // "pending", "completed"
-  date        String   // Format: YYYY-MM-DD
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  comments    ActivityComment[]
-  reactions   Json?    // Array of { emoji, user }
+  id        String            @id @default(cuid())
+  text      String            @db.Text
+  imageUrl  String?           @db.Text
+  sender    String // 'sajid' or 'nasywa'
+  status    String            @default("pending") // "pending", "completed"
+  date      String // Format: YYYY-MM-DD
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  comments  ActivityComment[]
+  reactions Json? // Array of { emoji, user }
 }
 
 model ActivityComment {

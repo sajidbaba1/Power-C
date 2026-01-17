@@ -37,7 +37,11 @@ export async function POST(req: Request) {
                 throw err;
             });
 
-        console.log("Result generated successfully");
+        console.log("🎯 Translation result:", {
+            translation: result.translation?.substring(0, 50),
+            hasWordBreakdown: (result.wordBreakdown || []).length > 0,
+            originalText: text
+        });
         return NextResponse.json(result);
 
     } catch (error: any) {

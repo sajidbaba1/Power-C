@@ -63,7 +63,10 @@ export async function POST(req: Request) {
                     imageUrl: message.imageUrl,
                     audioUrl: message.audioUrl,
                     unlockAt: message.unlockAt ? new Date(message.unlockAt) : undefined,
-                    type: message.type || "text"
+                    type: message.type || "text",
+                    parentId: message.parentId,
+                    isPinned: message.isPinned,
+                    reactions: message.reactions
                 }
             });
         } else {
@@ -82,7 +85,10 @@ export async function POST(req: Request) {
                     imageUrl: message.imageUrl,
                     audioUrl: message.audioUrl,
                     unlockAt: message.unlockAt ? new Date(message.unlockAt) : undefined,
-                    type: message.type || "text"
+                    type: message.type || "text",
+                    parentId: message.parentId,
+                    isPinned: message.isPinned || false,
+                    reactions: message.reactions || []
                 }
             });
         }
