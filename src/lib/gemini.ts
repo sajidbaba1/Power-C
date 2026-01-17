@@ -36,10 +36,12 @@ export async function getGeminiModel() {
         }
     }
 
-    // 3. Select a key (Rotation)
+    // 3. Select a key (Random Distribution)
     let apiKey = "";
     if (allKeys.length > 0) {
-        const index = Math.floor(Date.now() / 1000) % allKeys.length;
+        // Use Math.random() instead of time-based rotation to ensure concurrent requests 
+        // in the same second get distributed across different keys
+        const index = Math.floor(Math.random() * allKeys.length);
         apiKey = allKeys[index];
         console.log(`Using Gemini API Key index ${index} from total pool of ${allKeys.length} keys`);
     } else {
