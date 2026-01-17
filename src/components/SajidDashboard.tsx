@@ -1182,24 +1182,9 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                                                     )}
                                                 </div>
                                             )}
-                                            {msg.translation && msg.translation !== msg.text && (
+                                            {msg.translation && (
                                                 <div className="mt-2 pt-2 border-t border-white/5">
                                                     <p className="text-xs text-indigo-300 italic">{msg.translation}</p>
-                                                </div>
-                                            )}
-                                            {msg.hindiTranslation && (
-                                                <div className={cn(
-                                                    "mt-1 pt-1",
-                                                    !msg.translation || msg.translation === msg.text ? "border-t border-white/5" : ""
-                                                )}>
-                                                    <p className={cn(
-                                                        "text-[10px] font-medium tracking-tight",
-                                                        msg.hindiTranslation.includes("AI Error") || msg.hindiTranslation.includes("AI Logic Offline")
-                                                            ? "text-red-400/80"
-                                                            : "text-amber-200/50"
-                                                    )}>
-                                                        {msg.hindiTranslation}
-                                                    </p>
                                                 </div>
                                             )}
                                         </div>
