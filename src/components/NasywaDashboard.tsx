@@ -627,7 +627,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         const res = await fetch("/api/lovenotes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text, author: "nasywa" })
+            body: JSON.stringify({ content: text, sender: "nasywa" })
         });
         const note = await res.json();
         setLoveNotes(prev => [note, ...prev]);
@@ -1973,15 +1973,15 @@ function LoveWallOverlay({ notes, onClose, onAdd, onDelete, role }: { notes: any
                                 className="p-6 rounded-3xl bg-gradient-to-br from-pink-500/5 to-rose-500/5 border border-pink-500/20 shadow-lg relative group overflow-hidden"
                             >
                                 <div className="absolute -top-4 -right-4 w-12 h-12 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-all" />
-                                <p className="text-sm font-medium italic mb-4 leading-relaxed">{note.text}</p>
+                                <p className="text-sm font-medium italic mb-4 leading-relaxed">{note.content || note.text}</p>
                                 <div className="flex items-center justify-between mt-auto">
                                     <div className="flex items-center gap-2">
-                                        <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black uppercase text-white", note.author === 'sajid' ? 'bg-blue-500' : 'bg-pink-500')}>
-                                            {note.author[0]}
+                                        <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black uppercase text-white", (note.sender || note.author) === 'sajid' ? 'bg-blue-500' : 'bg-pink-500')}>
+                                            {(note.sender || note.author)?.[0] || '?'}
                                         </div>
                                         <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">{new Date(note.createdAt).toLocaleDateString()}</span>
                                     </div>
-                                    {note.author === role && (
+                                    {(note.sender || note.author) === role && (
                                         <button
                                             onClick={() => onDelete(note.id)}
                                             className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 text-red-500 rounded-lg transition-all"
