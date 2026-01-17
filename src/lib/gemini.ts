@@ -36,26 +36,24 @@ export async function getGeminiModel() {
         }
     }
 
-    // 3. Selection & Fallback Pool
-    const fallbackKey = "AIzaSyDLwsufTnm7DMgf3iZpgkeiv448kqRdzFA";
-
-    // Add fallback to pool if it's not already there
-    if (!allKeys.includes(fallbackKey)) {
-        allKeys.push(fallbackKey);
-    }
+    // 3. Selection Logic
+    // REMOVED HARDCODED KEY (it was flagged as leaked). Use Vercel ENV instead.
 
     let apiKey = "";
     if (allKeys.length > 0) {
+        // Simple rotation based on time
         const index = Math.floor(Date.now() / 1000) % allKeys.length;
         apiKey = allKeys[index];
-        console.log(`Using Gemini Key [${apiKey.substring(0, 6)}...] (Pool size: ${allKeys.length})`);
     }
 
-    if (!apiKey) throw new Error("No Gemini API keys found");
+    if (!apiKey) {
+        console.error("CRITICAL: No Gemini API keys found in ENV or DB.");
+        throw new Error("No API keys configured");
+    }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use high-performance stable model
-    return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Standard stable model
+    return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 }
 
 export async function translateAndAnalyze(text: string, sourceLang: string, targetLang: string) {
@@ -102,8 +100,6 @@ export async function translateAndAnalyze(text: string, sourceLang: string, targ
             throw new Error("AI Safety filters blocked the response. Try again with different wording.");
         }
 
-        console.log("Raw Gemini Response received");
-
         // Robust JSON extraction
         const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -126,21 +122,27 @@ export async function translateAndAnalyze(text: string, sourceLang: string, targ
             console.error("Failed to parse Gemini response as JSON:", jsonText);
             return {
                 translation: text,
-                hindiTranslation: "अनुवाद त्रुटि",
+                hindiTranslation: "Translation Error",
                 wordBreakdown: []
             };
         }
     } catch (error: any) {
-        const rawError = error.message || 'Unknown Error';
-        // Use regex for global replacement
-        const sanitizedError = rawError.replace(/\[GoogleGenerativeAI Error\]/g, 'AI Error');
-        console.error("Gemini API error detailed:", rawError);
+        let errorMsg = error.message || 'Unknown AI Error';
+        console.error("Gemini API error detailed:", errorMsg);
 
-        // Return a graceful failure object that matches the expected structure
-        // Do NOT add error messages to wordBreakdown as it pollutes the user's vocabulary list
+        // EXTRA CLEANING: Extract only the human-readable part of the error
+        if (errorMsg.includes("429")) errorMsg = "Daily limit reached (Quota Exceeded)";
+        else if (errorMsg.includes("403")) errorMsg = "API Key restricted or leaked";
+        else if (errorMsg.includes("401")) errorMsg = "Invalid API Key";
+        else if (errorMsg.includes("Safety")) errorMsg = "Blocked by Safety Filters";
+        else if (errorMsg.includes("fetch")) errorMsg = "Network connection failed";
+
+        // Final fallback if the message is too long
+        if (errorMsg.length > 50) errorMsg = errorMsg.substring(0, 50) + "...";
+
         return {
             translation: text,
-            hindiTranslation: `AI Error: ${sanitizedError}`,
+            hindiTranslation: `AI Logic Offline: ${errorMsg}`,
             wordBreakdown: []
         };
     }
