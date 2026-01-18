@@ -10,7 +10,9 @@ import {
     Search,
     Calendar,
     Send,
-    Smile
+    Smile,
+    Heart,
+    HeartOff
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -248,6 +250,30 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
+                                    onClick={async () => {
+                                        const toEmail = userRole === "sajid" ? "nasywanazhifariyandi@gmail.com" : "ss2727303@gmail.com";
+                                        const fromName = userRole === "sajid" ? "Sajid" : "Nasywa";
+
+                                        // Trigger the email
+                                        fetch("/api/mood-notify", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({
+                                                from: fromName,
+                                                toEmail: toEmail,
+                                                mood: "Miss You"
+                                            })
+                                        });
+
+                                        alert("Miss You email sent to your partner! ❤️");
+                                    }}
+                                    className="p-3 bg-pink-500/10 text-pink-500 border border-pink-500/20 rounded-2xl hover:bg-pink-500/20 transition-all flex items-center gap-2"
+                                    title="Send Miss You Email"
+                                >
+                                    <Heart className="w-5 h-5 fill-current" />
+                                    <span className="text-xs font-bold uppercase tracking-wider hidden lg:inline">Miss You</span>
+                                </button>
+                                <button
                                     onClick={() => setShowHistory(!showHistory)}
                                     className={cn(
                                         "p-3 rounded-2xl transition-all",
@@ -326,21 +352,25 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                             </button>
 
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                        {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                    <span className={cn(
-                                                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                                                        activity.sender === "sajid" ? "bg-blue-500/20 text-blue-500" : "bg-pink-500/20 text-pink-500"
-                                                    )}>
-                                                        {activity.sender}
-                                                    </span>
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={cn(
+                                                            "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                                                            activity.sender === userRole
+                                                                ? "bg-primary/20 text-primary border border-primary/20"
+                                                                : "bg-purple-500/20 text-purple-400 border border-purple-500/20"
+                                                        )}>
+                                                            {activity.sender === userRole ? "Your Activity" : `${activity.sender}'s Activity`}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold text-muted-foreground bg-white/5 px-2 py-1 rounded-lg">
+                                                            {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
                                                 </div>
 
                                                 <p className={cn(
-                                                    "text-lg lg:text-xl font-medium leading-relaxed break-words",
-                                                    activity.status === "completed" && "text-muted-foreground line-through"
+                                                    "text-lg lg:text-xl font-semibold leading-relaxed break-words text-foreground",
+                                                    activity.status === "completed" && "text-muted-foreground line-through decoration-primary/50"
                                                 )}>
                                                     {activity.text}
                                                 </p>
@@ -351,23 +381,41 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                     </div>
                                                 )}
 
-                                                {/* Reactions */}
+                                                {/* Reactions with Attribution */}
                                                 <div className="flex flex-wrap items-center gap-2 mt-4">
                                                     {["❤️", "🔥", "💪", "✨", "🙌"].map(emoji => {
-                                                        const count = activity.reactions?.filter((r: any) => r.emoji === emoji).length || 0;
-                                                        const reactedByMe = activity.reactions?.some((r: any) => r.emoji === emoji && r.user === userRole);
+                                                        const reactionsForEmoji = activity.reactions?.filter((r: any) => r.emoji === emoji) || [];
+                                                        const count = reactionsForEmoji.length;
+                                                        const reactedByMe = reactionsForEmoji.some((r: any) => r.user === userRole);
+                                                        const reactedByPartner = reactionsForEmoji.some((r: any) => r.user !== userRole);
+
+                                                        if (count === 0) {
+                                                            return (
+                                                                <button
+                                                                    key={emoji}
+                                                                    onClick={() => handleAddReaction(activity.id, emoji)}
+                                                                    className="px-3 py-1.5 rounded-full text-xs hover:bg-white/10 transition-all opacity-40 hover:opacity-100"
+                                                                >
+                                                                    {emoji}
+                                                                </button>
+                                                            );
+                                                        }
 
                                                         return (
                                                             <button
                                                                 key={emoji}
                                                                 onClick={() => handleAddReaction(activity.id, emoji)}
                                                                 className={cn(
-                                                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all",
-                                                                    reactedByMe ? "bg-primary text-primary-foreground" : "bg-white/5 hover:bg-white/10"
+                                                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border",
+                                                                    reactedByMe
+                                                                        ? "bg-primary text-primary-foreground border-primary/50"
+                                                                        : "bg-white/5 border-white/10 hover:bg-white/10",
+                                                                    reactedByPartner && !reactedByMe && "border-purple-500/50 bg-purple-500/5 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
                                                                 )}
+                                                                title={reactedByPartner ? `${partnerRole} reacted with ${emoji}` : ""}
                                                             >
                                                                 <span>{emoji}</span>
-                                                                {count > 0 && <span className="opacity-70">{count}</span>}
+                                                                <span className="opacity-70">{count}</span>
                                                             </button>
                                                         );
                                                     })}
@@ -381,16 +429,30 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
 
                                                 {/* Comments List */}
                                                 {activity.comments && activity.comments.length > 0 && (
-                                                    <div className="mt-4 space-y-3 bg-white/3 p-4 rounded-2xl border border-white/5">
-                                                        {activity.comments.map(comment => (
-                                                            <div key={comment.id} className="text-sm">
-                                                                <span className={cn(
-                                                                    "font-bold mr-2 lowercase",
-                                                                    comment.sender === "sajid" ? "text-blue-400" : "text-pink-400"
-                                                                )}>{comment.sender}:</span>
-                                                                <span className="text-muted-foreground">{comment.text}</span>
-                                                            </div>
-                                                        ))}
+                                                    <div className="mt-5 space-y-3">
+                                                        <div className="flex items-center gap-2 mb-2 px-1">
+                                                            <MessageCircle className="w-3.5 h-3.5 text-primary" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Interactions</span>
+                                                        </div>
+                                                        <div className="space-y-2.5 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-inner">
+                                                            {activity.comments.map(comment => (
+                                                                <div key={comment.id} className={cn(
+                                                                    "flex flex-col gap-1 p-3 rounded-2xl",
+                                                                    comment.sender === userRole ? "bg-primary/10 border border-primary/20" : "bg-purple-500/10 border border-purple-500/20"
+                                                                )}>
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span className={cn(
+                                                                            "text-[10px] font-black uppercase tracking-tighter",
+                                                                            comment.sender === userRole ? "text-primary" : "text-purple-400"
+                                                                        )}>{comment.sender === userRole ? "You" : comment.sender}</span>
+                                                                        <span className="text-[8px] text-muted-foreground">
+                                                                            {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-sm text-foreground/90 leading-snug">{comment.text}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
 

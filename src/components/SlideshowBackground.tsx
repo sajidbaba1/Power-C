@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// User images from public/slideshow
+// User images from public/slideshow and uploaded childhood photos
 const IMAGES = [
     "/slideshow/1.jpg",
     "/slideshow/2.jpg",
@@ -11,7 +11,9 @@ const IMAGES = [
     "/slideshow/5.jpg",
     "/slideshow/6.jpg",
     "/slideshow/7.jpg",
-    "/slideshow/8.jpg"
+    "/slideshow/8.jpg",
+    "https://res.cloudinary.com/dd431rll2/image/upload/v1768751651/power-couple-slideshow/childhood-1.jpg",
+    "https://res.cloudinary.com/dd431rll2/image/upload/v1768751652/power-couple-slideshow/childhood-2.jpg"
 ];
 
 export default function SlideshowBackground({ isPlaying }: { isPlaying: boolean }) {
