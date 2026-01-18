@@ -36,17 +36,17 @@ export async function getAllGeminiKeys() {
         }
     }
 
-    // Shuffle keys to distribute load
-    if (allKeys.length > 0) {
-        return allKeys.sort(() => Math.random() - 0.5);
-    }
-
-    // Final fallback
-    return [
+    // 3. Add Hardcoded Fallback keys to the pool
+    const fallbackKeys = [
         "AIzaSyDq06z7FCqFVaMYonmiEqImQvRoj_VJTQE",
         "AIzaSyC1SjGqkHc0F82-jetK6X9Rdj68PfpZtg4",
         "AIzaSyCeIjzNfwSOJ1aqtIjd8s7zvrCEpA67Ha8"
     ];
+    allKeys = [...allKeys, ...fallbackKeys];
+
+    // Remove duplicates and Shuffle
+    const uniqueKeys = Array.from(new Set(allKeys.filter(Boolean)));
+    return uniqueKeys.sort(() => Math.random() - 0.5);
 }
 
 export async function translateAndAnalyze(text: string, sourceLang: string, targetLang: string) {
