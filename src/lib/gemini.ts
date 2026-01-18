@@ -54,7 +54,7 @@ export async function getGeminiModel() {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     // Use the model version specified by the user
-    return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 }
 
 export async function translateAndAnalyze(text: string, sourceLang: string, targetLang: string) {
