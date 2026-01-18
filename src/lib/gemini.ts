@@ -42,7 +42,11 @@ export async function getAllGeminiKeys() {
     }
 
     // Final fallback
-    return ["AIzaSyDq06z7FCqFVaMYonmiEqImQvRoj_VJTQE"];
+    return [
+        "AIzaSyDq06z7FCqFVaMYonmiEqImQvRoj_VJTQE",
+        "AIzaSyC1SjGqkHc0F82-jetK6X9Rdj68PfpZtg4",
+        "AIzaSyCeIjzNfwSOJ1aqtIjd8s7zvrCEpA67Ha8"
+    ];
 }
 
 export async function translateAndAnalyze(text: string, sourceLang: string, targetLang: string) {
