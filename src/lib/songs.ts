@@ -1,4 +1,4 @@
-export type EffectType = "snow" | "hearts" | "rain" | "stars" | "sparkles" | "butterflies" | "none";
+export type EffectType = "snow" | "hearts" | "rain" | "stars" | "sparkles" | "butterflies" | "sweet_rain_butterflies" | "none";
 
 export interface Song {
     id: string;
@@ -37,5 +37,11 @@ export const LOCAL_SONGS: Song[] = [
         title: "Tujhe Sochta Hoon",
         url: "https://res.cloudinary.com/dd431rll2/video/upload/v1768599607/Tujhe_Sochta_Hoon_Slowed_Reverb_Rain_K.K_Wormono_lofi_wxjw1b.mp3",
         effect: "sparkles"
+    },
+    {
+        id: "l6",
+        title: "Sweet Rain Butterflies",
+        url: "https://res.cloudinary.com/dd431rll2/video/upload/v1768753316/VID-20260117-WA0003_shnoqa.mp3",
+        effect: "sweet_rain_butterflies"
     }
 ];

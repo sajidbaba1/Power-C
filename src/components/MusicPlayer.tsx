@@ -25,7 +25,7 @@ interface MusicPlayerProps {
     className?: string;
 }
 
-export default function MusicPlayer({
+function MusicPlayerComponent({
     activeChat,
     pusherClient,
     currentEffect,
@@ -176,7 +176,7 @@ export default function MusicPlayer({
     if (!mounted) return null;
 
     return (
-        <>
+        <React.Fragment>
             <audio
                 ref={audioRef}
                 src={LOCAL_SONGS[currentIndex]?.url}
@@ -220,7 +220,9 @@ export default function MusicPlayer({
                     </button>
                 )}
             </div>
-        </>
+        </React.Fragment>
     );
 }
+
+export default React.memo(MusicPlayerComponent);
 

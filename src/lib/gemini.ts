@@ -46,7 +46,7 @@ export async function getGeminiModel() {
         console.log(`Using Gemini API Key index ${index} from total pool of ${allKeys.length} keys`);
     } else {
         // Final fallback
-        apiKey = "AIzaSyBWKccHpqzoNqaUsyBvv6DuECplbkho_2s";
+        apiKey = "AIzaSyDq06z7FCqFVaMYonmiEqImQvRoj_VJTQE";
         console.log("Using hardcoded Gemini API Key fallback");
     }
 

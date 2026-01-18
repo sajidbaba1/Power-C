@@ -1,32 +1,39 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
-export type EffectType = "snow" | "hearts" | "rain" | "stars" | "sparkles" | "butterflies" | "none";
+export type EffectType = "snow" | "hearts" | "rain" | "stars" | "sparkles" | "butterflies" | "sweet_rain_butterflies" | "none";
 
 interface BackgroundEffectsProps {
     effect: EffectType;
 }
 
-export default function BackgroundEffects({ effect }: BackgroundEffectsProps) {
+function BackgroundEffectsComponent({ effect }: BackgroundEffectsProps) {
     const [mounted, setMounted] = React.useState(false);
 
     React.useEffect(() => {
         setMounted(true);
     }, []);
 
-    if (!mounted || effect === "none") return null;
+    const particles = useMemo(() => {
+        if (!mounted || effect === "none") return [];
 
-    const getParticles = () => {
-        const count = 30; // Number of particles
-        const particles = [];
+        const count = 30;
+        const result = [];
 
         for (let i = 0; i < count; i++) {
             const delay = Math.random() * 5;
             const duration = 5 + Math.random() * 5;
             const startLeft = Math.random() * 100;
 
-            if (effect === "snow") {
-                particles.push(
+            const isRain = effect === "rain" || effect === "sweet_rain_butterflies";
+            const isButterflies = effect === "butterflies" || effect === "sweet_rain_butterflies";
+            const isSnow = effect === "snow";
+            const isHearts = effect === "hearts";
+            const isStars = effect === "stars";
+            const isSparkles = effect === "sparkles";
+
+            if (isSnow) {
+                result.push(
                     <motion.div
                         key={`snow-${i}`}
                         initial={{ y: -20, x: `${startLeft}vw`, opacity: 0 }}
@@ -42,8 +49,8 @@ export default function BackgroundEffects({ effect }: BackgroundEffectsProps) {
                         ❄️
                     </motion.div>
                 );
-            } else if (effect === "hearts") {
-                particles.push(
+            } else if (isHearts) {
+                result.push(
                     <motion.div
                         key={`heart-${i}`}
                         initial={{ y: -20, x: `${startLeft}vw`, opacity: 0 }}
@@ -55,8 +62,8 @@ export default function BackgroundEffects({ effect }: BackgroundEffectsProps) {
                         ❤️
                     </motion.div>
                 );
-            } else if (effect === "rain") {
-                particles.push(
+            } else if (isRain) {
+                result.push(
                     <motion.div
                         key={`rain-${i}`}
                         initial={{ y: -20, x: `${startLeft}vw`, opacity: 0 }}
@@ -66,8 +73,8 @@ export default function BackgroundEffects({ effect }: BackgroundEffectsProps) {
                         style={{ left: `${startLeft}vw` }}
                     />
                 );
-            } else if (effect === "stars") {
-                particles.push(
+            } else if (isStars) {
+                result.push(
                     <motion.div
                         key={`star-${i}`}
                         initial={{ opacity: 0, x: `${startLeft}vw`, y: `${Math.random() * 100}vh`, scale: 0 }}
@@ -83,8 +90,8 @@ export default function BackgroundEffects({ effect }: BackgroundEffectsProps) {
                         ✨
                     </motion.div>
                 );
-            } else if (effect === "sparkles") {
-                particles.push(
+            } else if (isSparkles) {
+                result.push(
                     <motion.div
                         key={`sparkle-${i}`}
                         initial={{ opacity: 0, x: `${startLeft}vw`, y: `${Math.random() * 100}vh` }}
@@ -99,8 +106,11 @@ export default function BackgroundEffects({ effect }: BackgroundEffectsProps) {
                         ⭐
                     </motion.div>
                 );
-            } else if (effect === "butterflies") {
-                particles.push(
+            }
+
+            // For composite effect, we add butterflies separately or in addition
+            if (isButterflies) {
+                result.push(
                     <motion.div
                         key={`butterfly-${i}`}
                         initial={{ y: "110vh", x: `${startLeft}vw`, opacity: 0 }}
@@ -110,21 +120,25 @@ export default function BackgroundEffects({ effect }: BackgroundEffectsProps) {
                             rotate: [0, 20, -20, 0],
                             opacity: [0, 1, 0]
                         }}
-                        transition={{ duration: duration * 1.5, repeat: Infinity, ease: "easeInOut", delay }}
+                        transition={{ duration: duration * 1.5, repeat: Infinity, ease: "easeInOut", delay: delay * 1.2 }}
                         className="fixed pointer-events-none z-0"
-                        style={{ fontSize: `${12 + Math.random() * 15}px` }}
+                        style={{ fontSize: `${12 + Math.random() * 15}px`, left: `${startLeft}vw` }}
                     >
                         🦋
                     </motion.div>
                 );
             }
         }
-        return particles;
-    };
+        return result;
+    }, [mounted, effect]);
+
+    if (!mounted || effect === "none") return null;
 
     return (
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-[1]">
-            {getParticles()}
+            {particles}
         </div>
     );
 }
+
+export default React.memo(BackgroundEffectsComponent);

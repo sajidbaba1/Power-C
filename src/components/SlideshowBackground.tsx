@@ -1,5 +1,4 @@
-'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // User images from public/slideshow and uploaded childhood photos
@@ -24,7 +23,7 @@ const IMAGES = [
     "https://res.cloudinary.com/dd431rll2/image/upload/v1768752034/power-couple-slideshow/memory-8.jpg"
 ];
 
-export default function SlideshowBackground({ isPlaying }: { isPlaying: boolean }) {
+function SlideshowBackgroundComponent({ isPlaying }: { isPlaying: boolean }) {
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
@@ -61,3 +60,5 @@ export default function SlideshowBackground({ isPlaying }: { isPlaying: boolean 
         </div>
     );
 }
+
+export default React.memo(SlideshowBackgroundComponent);
