@@ -17,7 +17,11 @@ const IMAGES = [
     "https://res.cloudinary.com/dd431rll2/image/upload/v1768751720/power-couple-slideshow/memory-1.jpg",
     "https://res.cloudinary.com/dd431rll2/image/upload/v1768751722/power-couple-slideshow/memory-2.jpg",
     "https://res.cloudinary.com/dd431rll2/image/upload/v1768751723/power-couple-slideshow/memory-3.jpg",
-    "https://res.cloudinary.com/dd431rll2/image/upload/v1768751725/power-couple-slideshow/memory-4.jpg"
+    "https://res.cloudinary.com/dd431rll2/image/upload/v1768751725/power-couple-slideshow/memory-4.jpg",
+    "https://res.cloudinary.com/dd431rll2/image/upload/v1768751819/power-couple-slideshow/memory-5.jpg",
+    "https://res.cloudinary.com/dd431rll2/image/upload/v1768751821/power-couple-slideshow/memory-6.jpg",
+    "https://res.cloudinary.com/dd431rll2/image/upload/v1768752033/power-couple-slideshow/memory-7.jpg",
+    "https://res.cloudinary.com/dd431rll2/image/upload/v1768752034/power-couple-slideshow/memory-8.jpg"
 ];
 
 export default function SlideshowBackground({ isPlaying }: { isPlaying: boolean }) {

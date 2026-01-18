@@ -588,7 +588,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     };
 
     const sendHeartFirework = async () => {
-        const text = "I love you Sajid ❤️";
+        const text = "Love You Sajid ❤️";
         const msgId = `msg-${Date.now()}`;
         const newMessage = {
             id: msgId,

@@ -656,7 +656,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     };
 
     const sendHeartFirework = async () => {
-        const text = "I love you ❤️";
+        const text = "Love You Nasywa ❤️";
         const msgId = `msg-${Date.now()}`;
         const newMessage = {
             id: msgId,
