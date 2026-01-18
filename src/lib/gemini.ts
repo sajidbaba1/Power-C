@@ -40,7 +40,10 @@ export async function getAllGeminiKeys() {
     const fallbackKeys = [
         "AIzaSyBB-6mYf0Abf3DcwgeXkTPzuyKPPpS7vIk",
         "AIzaSyAcJBvHv2lkEmjRSCby30uxMzL0BQOlzUI",
-        "AIzaSyCeIjzNfwSOJ1aqtIjd8s7zvrCEpA67Ha8"
+        "AIzaSyCeIjzNfwSOJ1aqtIjd8s7zvrCEpA67Ha8",
+        "AIzaSyBB-6mYf0Abf3DcwgeXkTPzuyKPPpS7vIk ",
+        "AIzaSyBB-6mYf0Abf3DcwgeXkTPzuyKPPpS7vIk",
+        "AIzaSyBB-6mYf0Abf3DcwgeXkTPzuyKPPpS7vIk"
     ];
     allKeys = [...allKeys, ...fallbackKeys];
 
