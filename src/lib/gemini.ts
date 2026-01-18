@@ -38,8 +38,8 @@ export async function getAllGeminiKeys() {
 
     // 3. Add Hardcoded Fallback keys to the pool
     const fallbackKeys = [
-        "AIzaSyDq06z7FCqFVaMYonmiEqImQvRoj_VJTQE",
-        "AIzaSyC1SjGqkHc0F82-jetK6X9Rdj68PfpZtg4",
+        "AIzaSyBB-6mYf0Abf3DcwgeXkTPzuyKPPpS7vIk",
+        "AIzaSyAcJBvHv2lkEmjRSCby30uxMzL0BQOlzUI",
         "AIzaSyCeIjzNfwSOJ1aqtIjd8s7zvrCEpA67Ha8"
     ];
     allKeys = [...allKeys, ...fallbackKeys];
@@ -60,7 +60,7 @@ export async function translateAndAnalyze(text: string, sourceLang: string, targ
         try {
             console.log(`Attempt ${i + 1}/${keys.length} using key: ${apiKey.substring(0, 8)}...`);
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
             const isHindiTarget = targetLang.toLowerCase() === "hindi";
             const prompt = `
