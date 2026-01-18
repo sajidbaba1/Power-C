@@ -251,6 +251,19 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
             });
             const updated = await res.json();
             setProfiles(prev => ({ ...prev, sajid: updated }));
+
+            // Trigger notification if mood is "Missing" or "Miss You"
+            if (mood === "Missing" || mood === "Miss You") {
+                fetch("/api/mood-notify", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        from: "Sajid",
+                        toEmail: "nasywanazhifariyandi@gmail.com",
+                        mood: mood
+                    })
+                }).catch(err => console.error("Mood notify failed:", err));
+            }
         } catch (e) {
             console.error("Failed to update mood", e);
         }
@@ -1013,7 +1026,8 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                     <div className="flex items-center gap-1 overflow-x-auto pb-1 no-scrollbar">
                         {[
                             { label: "Happy", icon: Smile, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-                            { label: "Miss You", icon: Heart, color: "text-pink-500", bg: "bg-pink-500/10" },
+                            { label: "Missing", icon: HeartOff, color: "text-pink-500", bg: "bg-pink-500/10" },
+                            { label: "Miss You", icon: Heart, color: "text-rose-500", bg: "bg-rose-500/10" },
                             { label: "Tired", icon: Coffee, color: "text-orange-500", bg: "bg-orange-500/10" },
                             { label: "Need a Hug", icon: Ghost, color: "text-blue-500", bg: "bg-blue-500/10" }
                         ].map((m) => (
