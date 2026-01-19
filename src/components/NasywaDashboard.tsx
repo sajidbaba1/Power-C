@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus, RotateCcw, ChevronRight } from "lucide-react";
+import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus, RotateCcw, ChevronRight, ChevronDown } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import confetti from "canvas-confetti";
@@ -47,8 +47,10 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [showSettings, setShowSettings] = useState(false);
     const [profiles, setProfiles] = useState<Record<string, any>>({});
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const longPressTimer = useRef<NodeJS.Timeout | null>(null);
     const [showMoreActions, setShowMoreActions] = useState(false);
     const [fireworkText, setFireworkText] = useState<string | null>(null);
     const lastFireworkId = useRef<string | null>(null);
@@ -81,7 +83,22 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [showReactionsFor, setShowReactionsFor] = useState<string | null>(null);
     const [activeThreads, setActiveThreads] = useState<Record<string, any[]>>({});
     const [activeMessageActions, setActiveMessageActions] = useState<string | null>(null);
-    const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
+    const [isScrolledUp, setIsScrolledUp] = useState(false);
+
+    useEffect(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+            setShowScrollButton(!isAtBottom);
+            setIsScrolledUp(container.scrollTop > 100);
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const isUnlocked = (msg: any) => {
         if (msg.type !== "secret" || msg.sender === "nasywa") return true;
@@ -896,10 +913,18 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             )}
 
             {/* Sidebar */}
-            <aside className={cn(
-                "fixed lg:relative inset-y-0 left-0 z-50 w-72 lg:w-80 border-r border-border bg-card/95 backdrop-blur-xl flex flex-col transition-transform duration-300",
-                showSidebar ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-            )}>
+            <motion.aside
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.05}
+                onDragEnd={(_, info) => {
+                    if (info.offset.x < -50) setShowSidebar(false);
+                }}
+                className={cn(
+                    "fixed lg:relative inset-y-0 left-0 z-50 w-72 lg:w-80 border-r border-border bg-card/95 backdrop-blur-xl flex flex-col transition-transform duration-300",
+                    showSidebar ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                )}
+            >
                 <div className="p-4 lg:p-6 border-b border-border">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -1039,11 +1064,11 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         ))}
                     </div>
                 </div>
-            </aside>
+            </motion.aside>
 
             {/* Main Chat */}
             <main className="flex-1 flex flex-col min-w-0">
-                <header className="h-14 lg:h-16 border-b border-border flex items-center justify-between px-3 lg:px-6 bg-card/30 backdrop-blur-md shrink-0">
+                <header className="h-14 lg:h-16 border-b border-border flex items-center justify-between px-3 lg:px-6 bg-card/30 backdrop-blur-md shrink-0 z-[60]">
                     <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                         <button
                             onClick={() => setShowSidebar(!showSidebar)}
@@ -1061,7 +1086,34 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         </div>
                         <div className="min-w-0">
                             <h2 className="font-semibold text-sm lg:text-base capitalize truncate">{profiles[activeChat]?.name || activeChat}</h2>
-                            <p className="text-[10px] lg:text-xs text-green-500">Online</p>
+                            <p className="text-[10px] lg:text-xs text-green-500 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                Online
+                            </p>
+                        </div>
+                        <div className="ml-1 sm:ml-3">
+                            <NotificationBell
+                                userRole="nasywa"
+                                pusherClient={pusher}
+                                onNotificationClick={(n) => {
+                                    switch (n.type) {
+                                        case "activity":
+                                        case "reaction":
+                                        case "comment":
+                                            setShowActivities(true);
+                                            break;
+                                        case "lovenote":
+                                            setShowLoveWall(true);
+                                            break;
+                                        case "milestone":
+                                            setShowMilestones(true);
+                                            break;
+                                        case "jar":
+                                            setShowJar(true);
+                                            break;
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
 
@@ -1120,6 +1172,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
 
                 {/* Messages Container */}
                 <div
+                    ref={messagesContainerRef}
                     className="flex-1 overflow-y-auto p-3 lg:p-6 space-y-3 lg:space-y-4 pb-24 lg:pb-6 relative"
                     onClick={() => setActiveMessageActions(null)}
                     style={{
@@ -1364,10 +1417,28 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                         </motion.div>
                     )}
                     <div ref={messagesEndRef} />
+
+                    {/* Scroll to Bottom Button */}
+                    <AnimatePresence>
+                        {showScrollButton && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                                onClick={scrollToBottom}
+                                className="fixed bottom-24 lg:bottom-32 right-4 lg:right-8 z-30 p-3 bg-white/10 hover:bg-white/20 text-primary rounded-full shadow-2xl border border-white/10 backdrop-blur-xl transition-all hover:scale-110 active:scale-95"
+                            >
+                                <ChevronDown className="w-5 h-5" />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* Input */}
-                <div className="fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto p-3 lg:p-6 lg:pt-0 shrink-0 bg-background z-40">
+                <div className={cn(
+                    "fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto p-3 lg:p-6 lg:pt-0 shrink-0 z-40 transition-all duration-300",
+                    isScrolledUp ? "bg-zinc-950 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/5" : "bg-background/80 backdrop-blur-sm"
+                )}>
                     <div className="flex flex-col gap-2">
                         {replyingTo && (
                             <motion.div

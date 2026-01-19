@@ -125,11 +125,11 @@ export default function NotificationBell({ userRole, pusherClient, onNotificatio
 
                         {/* Notification Panel */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.3, originX: 1, originY: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.3, originX: 1, originY: 0 }}
+                            initial={{ opacity: 0, scale: 0.3, y: -20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.3, y: -20 }}
                             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                            className="absolute right-0 mt-3 w-72 sm:w-80 bg-card border border-white/10 rounded-[1.5rem] shadow-2xl z-[110] overflow-hidden flex flex-col max-h-[400px]"
+                            className="fixed top-20 right-4 w-[calc(100vw-2rem)] sm:w-80 bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[1000] overflow-hidden flex flex-col max-h-[70vh]"
                         >
                             <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
                                 <h3 className="font-bold text-sm">Notifications</h3>

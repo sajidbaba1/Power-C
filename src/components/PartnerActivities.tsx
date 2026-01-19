@@ -377,7 +377,7 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                         value={newActivityText}
                                                         onChange={(e) => setNewActivityText(e.target.value)}
                                                         placeholder="Write your heart out..."
-                                                        className="w-full bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-8 md:p-10 min-h-[250px] text-lg font-medium resize-none outline-none focus:ring-4 focus:ring-primary/10 placeholder:text-muted-foreground/30 transition-all shadow-inner"
+                                                        className="w-full bg-white/[0.03] border border-white/10 rounded-[2rem] p-5 md:p-8 min-h-[150px] text-sm md:text-base font-medium resize-none outline-none focus:ring-4 focus:ring-primary/10 placeholder:text-muted-foreground/30 transition-all shadow-inner"
                                                     />
                                                     <div className="absolute bottom-6 right-6 flex items-center gap-3">
                                                         <input
@@ -404,9 +404,9 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                     <motion.div
                                                         initial={{ opacity: 0, scale: 0.9 }}
                                                         animate={{ opacity: 1, scale: 1 }}
-                                                        className="relative w-full aspect-video rounded-[2.5rem] overflow-hidden border border-white/10 group shadow-2xl"
+                                                        className="relative w-full rounded-[2rem] overflow-hidden border border-white/10 group shadow-2xl bg-black/20"
                                                     >
-                                                        <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
+                                                        <img src={selectedImage} alt="Preview" className="w-full h-auto max-h-[300px] object-contain" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button
                                                                 onClick={() => setSelectedImage(null)}
@@ -510,7 +510,7 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                         : "bg-white/[0.03] border-white/10 group-hover:bg-white/[0.05] group-hover:border-white/20 shadow-xl shadow-black/20"
                                                                 )}>
                                                                     <p className={cn(
-                                                                        "text-base md:text-lg lg:text-xl font-semibold leading-relaxed tracking-tight break-words",
+                                                                        "text-sm md:text-base lg:text-lg font-semibold leading-relaxed tracking-tight break-words",
                                                                         activity.status === "completed" && "text-muted-foreground line-through decoration-primary/30"
                                                                     )}>
                                                                         {activity.text}
