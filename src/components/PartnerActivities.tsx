@@ -456,13 +456,13 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
 
                                                         {/* Activity Body */}
                                                         <div className={cn(
-                                                            "p-6 lg:p-8 rounded-[2rem] border transition-all duration-500",
+                                                            "p-4 md:p-6 lg:p-8 rounded-[2rem] border transition-all duration-500",
                                                             activity.status === "completed"
                                                                 ? "bg-green-500/[0.03] border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.05)]"
                                                                 : "bg-white/5 border-white/10 group-hover:bg-white/[0.07] group-hover:border-white/20 shadow-xl shadow-black/20"
                                                         )}>
                                                             <p className={cn(
-                                                                "text-xl lg:text-2xl font-semibold leading-relaxed tracking-tight break-words",
+                                                                "text-base md:text-lg lg:text-xl font-semibold leading-relaxed tracking-tight break-words",
                                                                 activity.status === "completed" && "text-muted-foreground line-through decoration-primary/30"
                                                             )}>
                                                                 {activity.text}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus, RotateCcw, ChevronRight } from "lucide-react";
+import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus, RotateCcw, ChevronRight, ChevronDown } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import confetti from "canvas-confetti";
@@ -58,6 +58,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     const [isSecretMode, setIsSecretMode] = useState(false);
     const [secretUnlockTime, setSecretUnlockTime] = useState<string>("20:00");
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [showMoreActions, setShowMoreActions] = useState(false);
@@ -71,6 +72,8 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     const [showActivities, setShowActivities] = useState(false);
     const [activeMessageActions, setActiveMessageActions] = useState<string | null>(null);
     const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+    const [isScrolledUp, setIsScrolledUp] = useState(false);
+    const [showScrollButton, setShowScrollButton] = useState(false);
 
     const [profiles, setProfiles] = useState<Record<string, any>>({});
     const [fireworkText, setFireworkText] = useState<string | null>(null);
@@ -597,6 +600,24 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
             }));
         }
     }, [messages[activeChat], activeChat]);
+
+    // Scroll detection for showing scroll-to-bottom button
+    useEffect(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            const { scrollTop, scrollHeight, clientHeight } = container;
+            const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+            // Show button if scrolled up more than 200px
+            setShowScrollButton(distanceFromBottom > 200);
+            setIsScrolledUp(distanceFromBottom > 100);
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleSearchInput = (val: string) => {
         setInputValue(val);
@@ -1223,6 +1244,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
 
                 {/* Messages Container */}
                 <div
+                    ref={messagesContainerRef}
                     className="flex-1 overflow-y-auto p-3 lg:p-6 space-y-3 lg:space-y-4 pb-24 lg:pb-6 relative"
                     onClick={() => setActiveMessageActions(null)}
                     style={{
@@ -1245,10 +1267,11 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                                     <motion.div
                                         key={msg.id}
                                         initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
+                                        animate={{ opacity: 1, y: 0, x: 0 }}
                                         drag="x"
                                         dragConstraints={{ left: 0, right: 100 }}
                                         dragElastic={0.4}
+                                        dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                                         onDragEnd={(_, info) => {
                                             if (info.offset.x > 50) {
                                                 setReplyingTo(msg);
@@ -1472,6 +1495,21 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                         )
                     }
                     <div ref={messagesEndRef} />
+
+                    {/* Scroll to Bottom Button */}
+                    <AnimatePresence>
+                        {showScrollButton && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                                onClick={scrollToBottom}
+                                className="fixed bottom-24 lg:bottom-32 right-4 lg:right-8 z-30 p-3 bg-primary/90 hover:bg-primary rounded-full shadow-lg border border-white/20 backdrop-blur-sm transition-all hover:scale-110 active:scale-95"
+                            >
+                                <ChevronDown className="w-5 h-5 text-primary-foreground" />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* Input */}
