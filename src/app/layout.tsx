@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Power Couple | Multilingual WhatsApp Bridge",
+  title: "NasLove | Power Couple",
   description: "Seamlessly connect Indian and Indonesian communities with real-time translation and word breakdown.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Power Couple",
+    title: "NasLove",
   },
   viewport: {
     width: "device-width",

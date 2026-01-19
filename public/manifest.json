@@ -1,6 +1,6 @@
 {
-    "name": "Power Couple",
-    "short_name": "Power Couple",
+    "name": "NasLove",
+    "short_name": "NasLove",
     "description": "The ultimate dashboard for Sajid and Nasywa",
     "start_url": "/",
     "display": "standalone",
@@ -9,14 +9,14 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/icon-192x192.png",
+            "src": "/icon.jpg",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/jpeg"
         },
         {
-            "src": "/icon-512x512.png",
+            "src": "/icon.jpg",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/jpeg"
         }
     ]
 }

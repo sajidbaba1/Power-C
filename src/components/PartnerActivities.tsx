@@ -400,10 +400,10 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
 
                                                                 {/* Activity Body */}
                                                                 <div className={cn(
-                                                                    "p-6 md:p-8 rounded-[2.5rem] border transition-all duration-500 backdrop-blur-sm",
+                                                                    "p-6 md:p-8 rounded-[2.5rem] border",
                                                                     activity.status === "completed"
-                                                                        ? "bg-green-500/[0.03] border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.05)]"
-                                                                        : "bg-white/[0.03] border-white/10 group-hover:bg-white/[0.05] group-hover:border-white/20 shadow-xl shadow-black/20"
+                                                                        ? "bg-green-500/10 border-green-500/20"
+                                                                        : "bg-white/5 border-white/10 shadow-lg shadow-black/20"
                                                                 )}>
                                                                     <p className={cn(
                                                                         "text-sm md:text-base lg:text-lg font-semibold leading-relaxed tracking-tight break-words select-text",
@@ -413,11 +413,12 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                     </p>
 
                                                                     {activity.imageUrl && (
-                                                                        <div className="mt-6 rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black/20 min-h-[200px] flex items-center justify-center">
+                                                                        <div className="mt-6 rounded-3xl overflow-hidden border border-white/10 shadow-md bg-black/20 min-h-[200px] flex items-center justify-center">
                                                                             <img
                                                                                 src={activity.imageUrl}
                                                                                 alt="Pulse"
-                                                                                className="w-full h-auto object-contain hover:scale-[1.02] transition-transform duration-700"
+                                                                                loading="lazy"
+                                                                                className="w-full h-auto object-contain"
                                                                                 style={{ maxHeight: '500px' }}
                                                                                 onError={(e) => {
                                                                                     // Hide broken images
@@ -435,7 +436,7 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                                 <button
                                                                                     key={emoji}
                                                                                     onClick={() => handleAddReaction(activity.id, emoji)}
-                                                                                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-lg hover:scale-110 active:scale-90"
+                                                                                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 active:bg-white/20 active:scale-95 transition-transform"
                                                                                 >
                                                                                     {emoji}
                                                                                 </button>
