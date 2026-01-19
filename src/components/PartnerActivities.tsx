@@ -119,11 +119,41 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Compress image before setting state
         const reader = new FileReader();
-        reader.onloadend = () => {
-            setSelectedImage(reader.result as string);
-        };
         reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                // Compress to JPEG with 0.7 quality
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                setSelectedImage(compressedBase64);
+            };
+        };
     }, []);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -519,7 +549,17 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
 
                                                                     {activity.imageUrl && (
                                                                         <div className="mt-6 rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black/20 min-h-[200px] flex items-center justify-center">
-                                                                            <img src={activity.imageUrl} alt="Pulse" className="w-full h-auto object-contain hover:scale-[1.02] transition-transform duration-700" style={{ maxHeight: '500px' }} />
+                                                                            <img
+                                                                                src={activity.imageUrl}
+                                                                                alt="Pulse"
+                                                                                className="w-full h-auto object-contain hover:scale-[1.02] transition-transform duration-700"
+                                                                                style={{ maxHeight: '500px' }}
+                                                                                onError={(e) => {
+                                                                                    // Hide broken images
+                                                                                    e.currentTarget.style.display = 'none';
+                                                                                    e.currentTarget.parentElement!.style.display = 'none';
+                                                                                }}
+                                                                            />
                                                                         </div>
                                                                     )}
 
