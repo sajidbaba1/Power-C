@@ -3,6 +3,7 @@ import { getPrisma } from "@/lib/db";
 import { pusherServer } from "@/lib/pusher";
 import { sendActivityEmail } from "@/lib/email";
 import { translateAndAnalyze } from "@/lib/gemini";
+import { sendPushNotification } from "@/lib/notifications";
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -101,6 +102,10 @@ export async function POST(req: Request) {
             createdAt: new Date().toISOString()
         });
 
+        // Push Notification
+        const targetRole = sender === "sajid" ? "nasywa" : "sajid";
+        await sendPushNotification(targetRole, "New Pulse", `${partnerName}: ${text.substring(0, 40)}...`);
+
         return NextResponse.json(activity);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -171,6 +176,9 @@ export async function PATCH(req: Request) {
                     sender: sender,
                     createdAt: new Date().toISOString()
                 });
+
+                // Push Notification
+                await sendPushNotification(activity.sender, "New Reaction", `${fromName} reacted ${reaction} to your pulse`);
             }
         } else if (comment && sender) {
             await (prisma as any).activityComment.create({
@@ -200,9 +208,11 @@ export async function PATCH(req: Request) {
                     type: "comment",
                     title: "New Comment",
                     message: `${fromName} commented on your activity`,
-                    sender: sender,
                     createdAt: new Date().toISOString()
                 });
+
+                // Push Notification
+                await sendPushNotification(activity.sender, "New Comment", `${fromName} commented: ${comment}`);
             }
         }
 

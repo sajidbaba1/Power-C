@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/db";
 import { pusherServer } from "@/lib/pusher";
+import { sendPushNotification } from "@/lib/notifications";
 
 function getChatKey(user1: string, user2: string) {
     const sorted = [user1, user2].sort();
@@ -98,6 +99,20 @@ export async function POST(req: Request) {
             await pusherServer.trigger(chatKey, "new-message", savedMessage);
         } catch (pushErr) {
             console.error("Pusher trigger failed:", pushErr);
+        }
+
+        // Push Notification for new messages
+        if (!existingMessage && savedMessage.sender && savedMessage.receiver) {
+            const notificationText = savedMessage.type === 'text'
+                ? (savedMessage.text || 'Sent a message')
+                : `Sent a ${savedMessage.type}`;
+
+            await sendPushNotification(
+                savedMessage.receiver,
+                `Message from ${savedMessage.sender}`,
+                notificationText.substring(0, 50),
+                '/'
+            );
         }
 
         console.log(`API POST: Success for ${message.id}`);

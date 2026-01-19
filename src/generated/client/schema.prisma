@@ -159,3 +159,13 @@ model ActivityComment {
   activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 }
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String // sajid or nasywa
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -5,6 +5,7 @@ import LoginScreen from "@/components/LoginScreen";
 import SajidDashboard from "@/components/SajidDashboard";
 import NasywaDashboard from "@/components/NasywaDashboard";
 import AdminDashboard from "@/components/AdminDashboard";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 export default function Home() {
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
@@ -47,11 +48,21 @@ export default function Home() {
   }
 
   if (user.role === "sajid") {
-    return <SajidDashboard user={user} onLogout={handleLogout} />;
+    return (
+      <>
+        <ServiceWorkerRegister userRole="sajid" />
+        <SajidDashboard user={user} onLogout={handleLogout} />
+      </>
+    );
   }
 
   if (user.role === "nasywa") {
-    return <NasywaDashboard user={user} onLogout={handleLogout} />;
+    return (
+      <>
+        <ServiceWorkerRegister userRole="nasywa" />
+        <NasywaDashboard user={user} onLogout={handleLogout} />
+      </>
+    );
   }
 
   if (user.role === "admin") {

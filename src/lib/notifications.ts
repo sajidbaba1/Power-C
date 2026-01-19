@@ -1,30 +1,53 @@
-import { Resend } from 'resend';
+import webPush from 'web-push';
+import { getPrisma } from './db';
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webPush.setVapidDetails(
+        process.env.VAPID_SUBJECT || 'mailto:ss2727303@gmail.com',
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+}
 
-export async function sendDomainNotification(email: string, subject: string, content: string) {
-    if (!resend) {
-        console.log("Resend API Key not set. Simulating email send to:", email);
-        return { success: true, simulated: true };
-    }
-
+export async function sendPushNotification(targetRole: string, title: string, body: string, url: string = '/') {
     try {
-        const data = await resend.emails.send({
-            from: 'Power Couple Bridge <bridge@yourdomain.com>',
-            to: [email],
-            subject: subject,
-            html: `
-        <div style="font-family: sans-serif; padding: 20px; color: #333;">
-          <h1 style="color: #6366f1;">Power Couple Notification</h1>
-          <p>${content}</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #999;">This is an automated notification from your Multilingual Bridge.</p>
-        </div>
-      `,
+        const prisma = getPrisma();
+        // Since we identify users by role 'sajid' or 'nasywa'
+        const subscriptions = await prisma.pushSubscription.findMany({
+            where: { userId: targetRole }
         });
-        return { success: true, data };
+
+        if (subscriptions.length === 0) {
+            console.log(`No active push subscriptions for ${targetRole}`);
+            return;
+        }
+
+        const payload = JSON.stringify({
+            title,
+            body,
+            url,
+            icon: '/icon.jpg'
+        });
+
+        const promises = subscriptions.map(sub =>
+            webPush.sendNotification({
+                endpoint: sub.endpoint,
+                keys: {
+                    p256dh: sub.p256dh,
+                    auth: sub.auth
+                }
+            }, payload).catch(async err => {
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                    // Subscription expired, delete it
+                    await prisma.pushSubscription.delete({ where: { id: sub.id } });
+                }
+                console.error(`Error sending to subscription ${sub.id}:`, err);
+            })
+        );
+
+        await Promise.all(promises);
+        console.log(`Push notifications sent to ${targetRole}`);
     } catch (error) {
-        console.error("Failed to send email:", error);
-        return { success: false, error };
+        console.error('Error sending push notifications:', error);
     }
 }

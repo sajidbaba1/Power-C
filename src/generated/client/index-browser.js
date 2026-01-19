@@ -268,6 +268,16 @@ exports.Prisma.ActivityCommentScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -309,7 +319,8 @@ exports.Prisma.ModelName = {
   ChatActivity: 'ChatActivity',
   PlaylistSong: 'PlaylistSong',
   Activity: 'Activity',
-  ActivityComment: 'ActivityComment'
+  ActivityComment: 'ActivityComment',
+  PushSubscription: 'PushSubscription'
 };
 
 /**
