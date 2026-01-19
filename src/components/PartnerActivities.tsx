@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import {
     X,
@@ -115,7 +115,7 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
         }
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -124,11 +124,11 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
             setSelectedImage(reader.result as string);
         };
         reader.readAsDataURL(file);
-    };
+    }, []);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleAddActivity = async () => {
+    const handleAddActivity = useCallback(async () => {
         if (!newActivityText.trim() || isSubmitting) return;
 
         setIsSubmitting(true);
@@ -177,7 +177,7 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
         } finally {
             setIsSubmitting(false);
         }
-    };
+    }, [newActivityText, selectedImage, isSubmitting, userRole, searchDate]);
 
     const handleToggleStatus = async (activity: Activity) => {
         if (activity.sender !== userRole) return; // Only owner can complete
@@ -377,7 +377,8 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                         value={newActivityText}
                                                         onChange={(e) => setNewActivityText(e.target.value)}
                                                         placeholder="Write your heart out..."
-                                                        className="w-full bg-white/[0.03] border border-white/10 rounded-[2rem] p-5 md:p-8 min-h-[150px] text-sm md:text-base font-medium resize-none outline-none focus:ring-4 focus:ring-primary/10 placeholder:text-muted-foreground/30 transition-all shadow-inner"
+                                                        className="w-full bg-white/[0.03] border border-white/10 rounded-[2rem] p-5 md:p-8 min-h-[150px] text-sm md:text-base font-medium resize-none outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground/30 transition-colors shadow-inner"
+                                                        style={{ willChange: 'contents' }}
                                                     />
                                                     <div className="absolute bottom-6 right-6 flex items-center gap-3">
                                                         <input
@@ -404,9 +405,9 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                     <motion.div
                                                         initial={{ opacity: 0, scale: 0.9 }}
                                                         animate={{ opacity: 1, scale: 1 }}
-                                                        className="relative w-full rounded-[2rem] overflow-hidden border border-white/10 group shadow-2xl bg-black/20"
+                                                        className="relative w-full rounded-[2rem] overflow-hidden border border-white/10 group shadow-2xl bg-black/20 min-h-[200px] flex items-center justify-center"
                                                     >
-                                                        <img src={selectedImage} alt="Preview" className="w-full h-auto max-h-[300px] object-contain" />
+                                                        <img src={selectedImage} alt="Preview" className="w-full h-auto object-contain" style={{ maxHeight: '400px' }} />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button
                                                                 onClick={() => setSelectedImage(null)}
@@ -517,8 +518,8 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                     </p>
 
                                                                     {activity.imageUrl && (
-                                                                        <div className="mt-6 rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black/20">
-                                                                            <img src={activity.imageUrl} alt="Pulse" className="w-full object-contain max-h-[400px] hover:scale-[1.02] transition-transform duration-700" />
+                                                                        <div className="mt-6 rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black/20 min-h-[200px] flex items-center justify-center">
+                                                                            <img src={activity.imageUrl} alt="Pulse" className="w-full h-auto object-contain hover:scale-[1.02] transition-transform duration-700" style={{ maxHeight: '500px' }} />
                                                                         </div>
                                                                     )}
 

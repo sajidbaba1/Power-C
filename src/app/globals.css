@@ -23,7 +23,7 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-  
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -96,4 +96,31 @@ body {
 
 .neon-text {
   text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+/* Performance optimizations */
+textarea,
+input {
+  will-change: contents;
+  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reduce repaints during typing */
+.no-transition-on-input {
+  transition: none !important;
+}
+
+/* Hardware acceleration for smooth animations */
+.gpu-accelerate {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize scrolling */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
