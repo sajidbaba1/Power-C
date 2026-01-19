@@ -399,12 +399,22 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                 </div>
 
                                                                 {/* Activity Body */}
-                                                                <div className={cn(
-                                                                    "p-6 md:p-8 rounded-[2.5rem] border",
-                                                                    activity.status === "completed"
-                                                                        ? "bg-green-500/10 border-green-500/20"
-                                                                        : "bg-white/5 border-white/10 shadow-lg shadow-black/20"
-                                                                )}>
+                                                                <motion.div
+                                                                    drag="x"
+                                                                    dragConstraints={{ left: 0, right: 0 }}
+                                                                    dragElastic={0.05}
+                                                                    onDragEnd={(_, info) => {
+                                                                        if (info.offset.x < -40) {
+                                                                            setActiveCommentId(activity.id);
+                                                                            if (navigator.vibrate) navigator.vibrate(50);
+                                                                        }
+                                                                    }}
+                                                                    className={cn(
+                                                                        "p-6 md:p-8 rounded-[2.5rem] border touch-pan-y",
+                                                                        activity.status === "completed"
+                                                                            ? "bg-green-500/10 border-green-500/20"
+                                                                            : "bg-white/5 border-white/10 shadow-lg shadow-black/20"
+                                                                    )}>
                                                                     <p className={cn(
                                                                         "text-sm md:text-base lg:text-lg font-semibold leading-relaxed tracking-tight break-words select-text",
                                                                         activity.status === "completed" && "text-muted-foreground line-through decoration-primary/30"
@@ -474,7 +484,7 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                             ))}
                                                                         </div>
                                                                     )}
-                                                                </div>
+                                                                </motion.div>
 
                                                                 {/* Comments Section */}
                                                                 <div className="mt-6 space-y-4">
@@ -535,9 +545,10 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                             </AnimatePresence>
                         </div>
                     </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
+                </div >
+            )
+            }
+        </AnimatePresence >
     );
 }
 
