@@ -1513,7 +1513,10 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                 </div>
 
                 {/* Input */}
-                <div className="fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto p-3 lg:p-6 lg:pt-0 shrink-0 bg-background z-40">
+                <div className={cn(
+                    "fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto p-3 lg:p-6 lg:pt-0 shrink-0 z-40 transition-all duration-300",
+                    isScrolledUp ? "bg-background" : "bg-background/80 backdrop-blur-sm"
+                )}>
                     <div className="flex flex-col gap-2">
                         {replyingTo && (
                             <motion.div
