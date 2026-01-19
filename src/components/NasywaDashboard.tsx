@@ -1348,7 +1348,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                 </div>
                             </motion.div>
                         ))
-                    )}
+                    })()}
                     {isOtherTyping && (
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
