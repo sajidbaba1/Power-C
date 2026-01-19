@@ -402,15 +402,15 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                 <motion.div
                                                                     drag="x"
                                                                     dragConstraints={{ left: 0, right: 0 }}
-                                                                    dragElastic={0.05}
+                                                                    dragElastic={0.7}
                                                                     onDragEnd={(_, info) => {
-                                                                        if (info.offset.x < -40) {
+                                                                        if (info.offset.x < -30) {
                                                                             setActiveCommentId(activity.id);
                                                                             if (navigator.vibrate) navigator.vibrate(50);
                                                                         }
                                                                     }}
                                                                     className={cn(
-                                                                        "p-6 md:p-8 rounded-[2.5rem] border touch-pan-y",
+                                                                        "p-6 md:p-8 rounded-[2.5rem] border touch-pan-y relative z-10",
                                                                         activity.status === "completed"
                                                                             ? "bg-green-500/10 border-green-500/20"
                                                                             : "bg-white/5 border-white/10 shadow-lg shadow-black/20"
