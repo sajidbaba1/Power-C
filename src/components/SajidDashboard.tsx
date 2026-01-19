@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus, RotateCcw } from "lucide-react";
+import { Send, MessageSquare, LogOut, User, Menu, BookOpen, X, Mail, Mic, Image as ImageIcon, Heart, Trash2, Palette, Smile, Settings, Upload, Rocket, Check, CheckCheck, Ghost, Flame, Coffee, HeartOff, MapPin, Calendar, Lock, Unlock, Play, Pause, Music, Stars, Layout, Plus, RotateCcw, ChevronRight } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import confetti from "canvas-confetti";
@@ -1143,7 +1143,8 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className={`w - 8 h - 8 lg: w - 10 lg: h - 10 rounded - xl bg - gradient - to - br ${chatPartners.find(p => p.id === activeChat)?.color} flex items - center justify - center shrink - 0 overflow - hidden`}>
+                        {/* Partner Profile Photo */}
+                        <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br ${chatPartners.find(p => p.id === activeChat)?.color} flex items-center justify-center shrink-0 overflow-hidden border-2 border-white/10 shadow-lg`}>
                             {profiles[activeChat]?.avatarUrl ? (
                                 <img src={profiles[activeChat].avatarUrl} alt={activeChat} className="w-full h-full object-cover" />
                             ) : (
@@ -1238,188 +1239,221 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                                 <p className="text-sm">Start chatting with {activeChat}</p>
                             </div>
                         ) : (
-                            messages[activeChat].map((msg) => (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={cn(
-                                        "flex gap-3 max-w-[85%] lg:max-w-[75%]",
-                                        msg.sender === "sajid" ? "ml-auto flex-row-reverse" : "mr-auto flex-row"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "w-8 h-8 rounded-lg shrink-0 flex items-center justify-center overflow-hidden",
-                                        msg.sender === "sajid" ? "bg-blue-500" : "bg-pink-500"
-                                    )}>
-                                        {profiles[msg.sender]?.avatarUrl ? (
-                                            <img src={profiles[msg.sender].avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <User className="w-4 h-4 text-white" />
+                            (() => {
+                                const messageMap = new Map(messages[activeChat].map(m => [m.id, m]));
+                                return messages[activeChat].map((msg) => (
+                                    <motion.div
+                                        key={msg.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        drag="x"
+                                        dragConstraints={{ left: 0, right: 100 }}
+                                        dragElastic={0.4}
+                                        onDragEnd={(_, info) => {
+                                            if (info.offset.x > 50) {
+                                                setReplyingTo(msg);
+                                                if ('vibrate' in navigator) navigator.vibrate(20);
+                                            }
+                                        }}
+                                        className={cn(
+                                            "flex gap-3 max-w-[85%] lg:max-w-[75%]",
+                                            msg.sender === "sajid" ? "ml-auto flex-row-reverse" : "mr-auto flex-row"
                                         )}
-                                    </div>
-                                    <div className={cn("flex flex-col gap-1 relative", msg.sender === "sajid" ? "items-end" : "items-start")}>
-                                        {msg.parentId && (
-                                            <div className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1">
-                                                <RotateCcw className="w-2.5 h-2.5" />
-                                                Replied to: {messages[activeChat].find(m => m.id === msg.parentId)?.text?.substring(0, 20)}...
-                                            </div>
-                                        )}
-                                        <div
-                                            className={cn(
-                                                "p-3 lg:p-4 rounded-2xl glass transition-all relative group/msg cursor-pointer lg:cursor-default",
-                                                msg.sender === "sajid" ? "bg-primary/20 rounded-tr-none" : "bg-muted/50 rounded-tl-none",
-                                                msg.isPinned && "border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]",
-                                                activeMessageActions === msg.id && "ring-2 ring-primary/50"
+                                    >
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-xl shrink-0 flex items-center justify-center overflow-hidden border border-white/10 shadow-lg",
+                                            msg.sender === "sajid" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-pink-500 to-rose-600"
+                                        )}>
+                                            {profiles[msg.sender]?.avatarUrl ? (
+                                                <img src={profiles[msg.sender].avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User className="w-4 h-4 text-white" />
                                             )}
-                                            onTouchStart={() => {
-                                                if (longPressTimer.current) clearTimeout(longPressTimer.current);
-                                                longPressTimer.current = setTimeout(() => {
-                                                    setActiveMessageActions(msg.id);
-                                                    if ('vibrate' in navigator) navigator.vibrate(50);
-                                                }, 500);
-                                            }}
-                                            onTouchEnd={() => {
-                                                if (longPressTimer.current) clearTimeout(longPressTimer.current);
-                                            }}
-                                            onContextMenu={(e) => {
-                                                if (window.innerWidth < 1024) e.preventDefault();
-                                            }}
-                                        >
-                                            {msg.isPinned && (
-                                                <div className="absolute -top-2 -left-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
-                                                    <MapPin className="w-3 h-3 text-white" />
+                                        </div>
+                                        <div className={cn("flex flex-col gap-1 relative", msg.sender === "sajid" ? "items-end" : "items-start")}>
+                                            {msg.parentId && (
+                                                <div className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1 px-2">
+                                                    <RotateCcw className="w-2.5 h-2.5" />
+                                                    Replied to: {messageMap.get(msg.parentId)?.text?.substring(0, 20)}...
                                                 </div>
                                             )}
+                                            <div
+                                                className={cn(
+                                                    "p-3 lg:p-4 rounded-2xl transition-all relative group/msg cursor-pointer lg:cursor-default",
+                                                    msg.sender === "sajid"
+                                                        ? "bg-gradient-to-br from-primary/30 to-primary/10 rounded-tr-none border border-primary/20 shadow-[0_4px_20px_rgba(59,130,246,0.1)] hover:border-primary/40"
+                                                        : "bg-gradient-to-br from-white/10 to-transparent backdrop-blur-md rounded-tl-none border border-white/5 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:border-white/20",
+                                                    msg.isPinned && "border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)]",
+                                                    activeMessageActions === msg.id && "ring-2 ring-primary/50"
+                                                )}
+                                                onTouchStart={() => {
+                                                    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                                    longPressTimer.current = setTimeout(() => {
+                                                        setActiveMessageActions(msg.id);
+                                                        if ('vibrate' in navigator) navigator.vibrate(50);
+                                                    }, 500);
+                                                }}
+                                                onTouchEnd={() => {
+                                                    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                                                }}
+                                                onContextMenu={(e) => {
+                                                    if (window.innerWidth < 1024) e.preventDefault();
+                                                }}
+                                            >
+                                                {/* Swipe Indicator (Hidden, only visible on drag) */}
+                                                <motion.div
+                                                    className="absolute -left-10 top-1/2 -translate-y-1/2 opacity-0 group-drag:opacity-100"
+                                                    style={{ x: -20 }}
+                                                >
+                                                    <RotateCcw className="w-5 h-5 text-primary" />
+                                                </motion.div>
 
-                                            {/* Action Menu (Long press on mobile, Hover on desktop) */}
-                                            <div className={cn(
-                                                "absolute bottom-full mb-2 flex gap-1 bg-card/95 backdrop-blur-md p-1.5 rounded-xl border border-white/10 transition-all z-[100]",
-                                                activeMessageActions === msg.id
-                                                    ? "opacity-100 scale-100 translate-y-0"
-                                                    : "opacity-0 scale-90 translate-y-2 pointer-events-none lg:pointer-events-auto lg:group-hover/msg:opacity-100 lg:group-hover/msg:scale-100 lg:group-hover/msg:translate-y-0",
-                                                msg.sender === "sajid" ? "right-0" : "left-0"
-                                            )}>
-                                                {["❤️", "😂", "😮", "🔥", "😢"].map(emoji => (
+                                                {msg.isPinned && (
+                                                    <div className="absolute -top-2 -left-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center shadow-lg border-2 border-background">
+                                                        <MapPin className="w-3 h-3 text-white" />
+                                                    </div>
+                                                )}
+
+                                                {/* Action Menu (Long press on mobile, Hover on desktop) */}
+                                                <div className={cn(
+                                                    "absolute bottom-full mb-3 flex gap-1 bg-card/95 backdrop-blur-xl p-2 rounded-2xl border border-white/20 shadow-2xl transition-all z-[100]",
+                                                    activeMessageActions === msg.id
+                                                        ? "opacity-100 scale-100 translate-y-0"
+                                                        : "opacity-0 scale-90 translate-y-2 pointer-events-none lg:pointer-events-auto lg:group-hover/msg:opacity-100 lg:group-hover/msg:scale-100 lg:group-hover/msg:translate-y-0",
+                                                    msg.sender === "sajid" ? "right-0" : "left-0"
+                                                )}>
+                                                    {["❤️", "😂", "😮", "🔥", "😢"].map(emoji => (
+                                                        <button
+                                                            key={emoji}
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                setActiveMessageActions(null);
+                                                                await fetch("/api/messages/react", {
+                                                                    method: "POST",
+                                                                    headers: { "Content-Type": "application/json" },
+                                                                    body: JSON.stringify({ messageId: msg.id, emoji, user: "sajid", chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}` })
+                                                                });
+                                                            }}
+                                                            className="hover:scale-150 active:scale-110 transition-transform px-1.5 text-lg lg:text-base outline-none"
+                                                        >
+                                                            {emoji}
+                                                        </button>
+                                                    ))}
+                                                    <div className="w-[1px] bg-white/10 mx-2" />
                                                     <button
-                                                        key={emoji}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setActiveMessageActions(null);
+                                                            setReplyingTo(msg);
+                                                        }}
+                                                        className="p-2 hover:text-primary hover:bg-white/5 rounded-lg active:scale-95 transition-all text-muted-foreground"
+                                                    >
+                                                        <RotateCcw className="w-4 h-4 lg:w-4 lg:h-4" />
+                                                    </button>
+                                                    <button
                                                         onClick={async (e) => {
                                                             e.stopPropagation();
                                                             setActiveMessageActions(null);
-                                                            await fetch("/api/messages/react", {
+                                                            await fetch("/api/messages/pin", {
                                                                 method: "POST",
                                                                 headers: { "Content-Type": "application/json" },
-                                                                body: JSON.stringify({ messageId: msg.id, emoji, user: "sajid", chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}` })
+                                                                body: JSON.stringify({ messageId: msg.id, isPinned: !msg.isPinned, chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}` })
                                                             });
                                                         }}
-                                                        className="hover:scale-125 active:scale-110 transition-transform px-1 text-base lg:text-sm"
+                                                        className={cn("p-2 rounded-lg transition-all active:scale-95", msg.isPinned ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:text-amber-400 hover:bg-white/5")}
                                                     >
-                                                        {emoji}
+                                                        <MapPin className="w-4 h-4 lg:w-4 lg:h-4" />
                                                     </button>
-                                                ))}
-                                                <div className="w-[1px] bg-white/10 mx-1" />
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setActiveMessageActions(null);
-                                                        setReplyingTo(msg);
-                                                    }}
-                                                    className="p-1.5 hover:text-primary active:text-primary transition-colors"
-                                                >
-                                                    <RotateCcw className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
-                                                </button>
-                                                <button
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        setActiveMessageActions(null);
-                                                        await fetch("/api/messages/pin", {
-                                                            method: "POST",
-                                                            headers: { "Content-Type": "application/json" },
-                                                            body: JSON.stringify({ messageId: msg.id, isPinned: !msg.isPinned, chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}` })
-                                                        });
-                                                    }}
-                                                    className={cn("p-1.5 transition-colors", msg.isPinned ? "text-amber-500" : "hover:text-amber-500 active:text-amber-500")}
-                                                >
-                                                    <MapPin className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
-                                                </button>
-                                            </div>
+                                                </div>
 
-                                            <div className="text-sm lg:text-base break-words">
-                                                {msg.imageUrl ? (
-                                                    <img src={msg.imageUrl} alt="Sent" className="max-w-full rounded-lg mb-2 shadow-lg cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
-                                                ) : msg.type === "sticker" ? (
-                                                    <div className="text-5xl">{msg.text}</div>
-                                                ) : msg.type === "secret" && !isUnlocked(msg) ? (
-                                                    <div className="flex flex-col items-center gap-2 py-4 px-8 opacity-50 select-none">
-                                                        <Lock className="w-8 h-8 animate-pulse text-amber-500" />
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-center">
-                                                            Secret Message<br />
-                                                            <span className="text-amber-500">Unlocks at {msg.unlockAt}</span>
-                                                        </p>
+                                                <div className="text-sm lg:text-[15px] break-words leading-relaxed font-medium">
+                                                    {msg.imageUrl ? (
+                                                        <img src={msg.imageUrl} alt="Sent" className="max-w-full rounded-xl mb-2 shadow-2xl border border-white/10 cursor-pointer transition-transform hover:scale-[1.02]" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                                                    ) : msg.type === "sticker" ? (
+                                                        <div className="text-6xl my-2 drop-shadow-xl">{msg.text}</div>
+                                                    ) : msg.type === "secret" && !isUnlocked(msg) ? (
+                                                        <div className="flex flex-col items-center gap-2 py-6 px-10 opacity-70 select-none bg-black/20 rounded-xl border border-white/5 shadow-inner">
+                                                            <Lock className="w-10 h-10 animate-pulse text-amber-500" />
+                                                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-center">
+                                                                Encrypted<br />
+                                                                <span className="text-amber-500 font-display">T-{msg.unlockAt}</span>
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        msg.text
+                                                    )}
+                                                </div>
+
+                                                {/* Reactions Display */}
+                                                {msg.reactions && (msg.reactions as any[]).length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 mt-3">
+                                                        {(msg.reactions as any[]).map((r, i) => (
+                                                            <motion.span
+                                                                initial={{ scale: 0 }}
+                                                                animate={{ scale: 1 }}
+                                                                key={i}
+                                                                className="text-[11px] bg-white/10 backdrop-blur-md border border-white/10 px-2 py-1 rounded-full flex items-center gap-1 shadow-lg"
+                                                            >
+                                                                {r.emoji}
+                                                            </motion.span>
+                                                        ))}
                                                     </div>
-                                                ) : (
-                                                    msg.text
+                                                )}
+
+                                                {msg.status === "sending" && (
+                                                    <div className="mt-2 flex items-center gap-1.5 px-1">
+                                                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" />
+                                                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                                                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                                                        <span className="text-[10px] text-muted-foreground ml-1 font-bold">TRANSLATING...</span>
+                                                    </div>
+                                                )}
+
+                                                {msg.sender === "sajid" && (
+                                                    <div className="flex justify-end mt-1.5 opacity-50 group-hover/msg:opacity-100 transition-opacity">
+                                                        {msg.status === "seen" ? (
+                                                            <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
+                                                        ) : msg.status === "sent" ? (
+                                                            <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/50" />
+                                                        ) : (
+                                                            <Check className="w-3.5 h-3.5 text-muted-foreground/50" />
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {msg.translation && (
+                                                    <div className="mt-3 pt-3 border-t border-white/5 group-hover/msg:border-white/10 transition-colors">
+                                                        <div className="flex items-center gap-1.5 mb-1.5">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                                            <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400">Indonesian</span>
+                                                        </div>
+                                                        <p className="text-[13px] text-emerald-300/90 font-medium leading-relaxed italic">{msg.translation}</p>
+                                                        {msg.wordBreakdown && (msg.wordBreakdown as any[]).length > 0 && (
+                                                            <details className="mt-2 group/details">
+                                                                <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-white transition-all list-none flex items-center gap-1 font-bold uppercase tracking-tighter">
+                                                                    <ChevronRight className="w-3 h-3 group-open/details:rotate-90 transition-transform" />
+                                                                    Word breakdown
+                                                                </summary>
+                                                                <div className="mt-2 grid grid-cols-1 gap-1.5">
+                                                                    {(msg.wordBreakdown as any[]).slice(0, 5).map((w, i) => (
+                                                                        <div key={i} className="text-[10px] bg-emerald-500/5 border border-emerald-500/10 p-2 rounded-xl flex items-center justify-between group-hover/msg:border-emerald-500/20 transition-all">
+                                                                            <span className="font-black text-emerald-400">{w.word}</span>
+                                                                            <span className="text-emerald-300/70">{w.indonesian || w.translation}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </details>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
-
-                                            {/* Reactions Display */}
-                                            {msg.reactions && (msg.reactions as any[]).length > 0 && (
-                                                <div className="flex flex-wrap gap-1 mt-2">
-                                                    {(msg.reactions as any[]).map((r, i) => (
-                                                        <span key={i} className="text-[10px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                                                            {r.emoji}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {msg.status === "sending" && (
-                                                <div className="mt-1 flex items-center gap-1">
-                                                    <div className="w-1 h-1 bg-primary rounded-full animate-bounce" />
-                                                    <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
-                                                    <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
-                                                    <span className="text-[9px] text-muted-foreground ml-1">Translating...</span>
-                                                </div>
-                                            )}
-                                            {msg.sender === "sajid" && (
-                                                <div className="flex justify-end mt-1">
-                                                    {msg.status === "seen" ? (
-                                                        <CheckCheck className="w-3 h-3 text-blue-400" />
-                                                    ) : msg.status === "sent" ? (
-                                                        <CheckCheck className="w-3 h-3 text-muted-foreground/50" />
-                                                    ) : (
-                                                        <Check className="w-3 h-3 text-muted-foreground/50" />
-                                                    )}
-                                                </div>
-                                            )}
-                                            {msg.translation && (
-                                                <div className="mt-2 pt-2 border-t border-white/10">
-                                                    <div className="flex items-center gap-1 mb-1">
-                                                        <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-medium">🇮🇩 Indonesian</span>
-                                                    </div>
-                                                    <p className="text-xs text-emerald-300 italic">{msg.translation}</p>
-                                                    {msg.wordBreakdown && (msg.wordBreakdown as any[]).length > 0 && (
-                                                        <details className="mt-1">
-                                                            <summary className="text-[9px] text-muted-foreground cursor-pointer hover:text-white transition">Word breakdown</summary>
-                                                            <div className="mt-1 flex flex-wrap gap-1">
-                                                                {(msg.wordBreakdown as any[]).slice(0, 5).map((w, i) => (
-                                                                    <span key={i} className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                                                                        {w.word} → {w.indonesian || w.translation}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        </details>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-2 px-2 mt-0.5 opacity-60">
+                                                <span className="text-[10px] font-medium tracking-tight text-muted-foreground">{msg.timestamp}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2 px-2">
-                                            <span className="text-[10px] text-muted-foreground">{msg.timestamp}</span>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))
-                        )
+                                    </motion.div>
+                                ))
+                            })())
                     }
                     {
                         isOtherTyping && (
@@ -1512,7 +1546,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                             )}
                         </AnimatePresence>
 
-                        <div className="glass border border-white/10 rounded-2xl p-2 flex items-end gap-2">
+                        <div className="bg-card border border-white/10 rounded-2xl p-2 flex items-end gap-2 shadow-xl">
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -1743,16 +1777,19 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                             <p className="text-sm">Start chatting to collect Indonesian words!</p>
                         </div>
                     ) : (
-                        learnedWords.map((item: any, idx: number) => (
-                            <div key={idx} className="p-3 rounded-xl glass border border-white/5 hover:border-primary/20 transition-all">
-                                <div className="flex items-center justify-between mb-1">
-                                    <p className="font-bold text-sm">{item.word}</p>
-                                    <span className="text-xs text-muted-foreground">#{idx + 1}</span>
+                        (() => {
+                            const messageMap = new Map(messages[activeChat].map(m => [m.id, m])); // This line is not needed here, but keeping it as per the instruction's diff context.
+                            return learnedWords.map((item: any, idx: number) => (
+                                <div key={idx} className="p-3 rounded-xl glass border border-white/5 hover:border-primary/20 transition-all">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <p className="font-bold text-sm">{item.word}</p>
+                                        <span className="text-xs text-muted-foreground">#{idx + 1}</span>
+                                    </div>
+                                    <p className="text-indigo-300 font-medium mb-1 text-sm">{item.indonesian}</p>
+                                    <p className="text-xs text-muted-foreground">{item.meaning}</p>
                                 </div>
-                                <p className="text-indigo-300 font-medium mb-1 text-sm">{item.indonesian}</p>
-                                <p className="text-xs text-muted-foreground">{item.meaning}</p>
-                            </div>
-                        ))
+                            ))
+                        })()
                     )}
                 </div>
 

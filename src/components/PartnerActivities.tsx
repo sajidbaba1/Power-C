@@ -243,7 +243,7 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                         initial={{ scale: 0.95, opacity: 0, y: 40 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 40 }}
-                        className="relative w-full max-w-4xl h-full sm:h-[90vh] bg-card/50 backdrop-blur-2xl border border-white/10 rounded-none sm:rounded-[3rem] overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] flex flex-col"
+                        className="relative w-full max-w-4xl h-full sm:h-[90vh] bg-card backdrop-blur-2xl border border-white/10 rounded-none sm:rounded-[3rem] overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] flex flex-col"
                     >
                         {/* Header Area */}
                         <div className="relative shrink-0 overflow-hidden">
@@ -527,15 +527,15 @@ export default function PartnerActivities({ isOpen, onClose, userRole, pusherCli
                                                                     >
                                                                         <div className="pt-6 space-y-4">
                                                                             {activity.comments?.map(comment => (
-                                                                                <div key={comment.id} className="flex gap-3 items-start bg-white/5 p-4 rounded-2xl border border-white/5">
+                                                                                <div key={comment.id} className="flex gap-3 items-start bg-white/5 p-3 rounded-2xl border border-white/5">
                                                                                     <div className="flex-1">
                                                                                         <div className="flex items-center justify-between mb-1">
-                                                                                            <span className="text-[10px] font-black text-primary uppercase">{comment.sender}</span>
+                                                                                            <span className="text-[9px] font-black text-primary uppercase tracking-wider">{comment.sender}</span>
                                                                                             <span className="text-[8px] font-medium text-muted-foreground">
                                                                                                 {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                                                             </span>
                                                                                         </div>
-                                                                                        <p className="text-xs font-medium text-foreground/90 leading-relaxed">{comment.text}</p>
+                                                                                        <p className="text-[10px] font-medium text-foreground/90 leading-relaxed">{comment.text}</p>
                                                                                     </div>
                                                                                 </div>
                                                                             ))}
