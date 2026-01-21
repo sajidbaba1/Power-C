@@ -8,6 +8,79 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Robust list of public Cobalt instances
+// Mixed v10 and v7 support handling in logic
+const COBALT_INSTANCES = [
+    "https://cobalt.api.red",  // Often reliable
+    "https://api.cobalt.best", // Often reliable
+    "https://api.wuk.sh",      // Popular
+    "https://cobalt.100ms.video"
+];
+
+async function getCobaltDownloadUrl(youtubeUrl: string) {
+    let lastError;
+
+    for (const instance of COBALT_INSTANCES) {
+        try {
+            console.log(`Trying Cobalt instance: ${instance}`);
+
+            // Try v10 API (Standard for new instances) -> POST /
+            // Payload: { url, downloadMode: "audio", audioFormat: "mp3" }
+            const res = await fetch(`${instance}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    url: youtubeUrl,
+                    downloadMode: "audio",
+                    audioFormat: "mp3"
+                })
+            });
+
+            // If 404, might be v7 instance at /api/json
+            if (res.status === 404) {
+                console.log(`${instance} returned 404 on root, trying /api/json (v7)`);
+                const res7 = await fetch(`${instance}/api/json`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        url: youtubeUrl,
+                        isAudioOnly: true,
+                        aFormat: "mp3"
+                    })
+                });
+
+                if (res7.ok) {
+                    const data7 = await res7.json();
+                    if (data7.url) return data7.url;
+                    if (data7.picker && data7.picker.length > 0) return data7.picker[0].url;
+                }
+            } else if (res.ok) {
+                const data = await res.json();
+                // v10 response structure: { status: "stream"|"redirect", url: "..." }
+                if (data.url) return data.url;
+                // Sometimes it returns a 'tunnel' or 'picker'
+                if (data.picker && data.picker.length > 0) return data.picker[0].url;
+                // If status is error
+                if (data.status === 'error') {
+                    console.error(`Cobalt Check Error on ${instance}:`, data);
+                }
+            }
+
+        } catch (e: any) {
+            console.log(`Failed to fetch from ${instance}:`, e.message);
+            lastError = e;
+        }
+    }
+
+    throw new Error(lastError?.message || "All Cobalt instances failed to return a download URL");
+}
+
 export async function POST(req: Request) {
     try {
         const { youtubeUrl } = await req.json();
@@ -21,33 +94,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
         }
 
-        // Use Cobalt API for download (bypasses YouTube blocks)
-        // Using a public instance (api.cobalt.tools)
-        const cobaltResponse = await fetch("https://api.cobalt.tools/api/json", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify({
-                url: youtubeUrl,
-                isAudioOnly: true,
-                aFormat: "mp3"
-            })
-        });
+        // Get download URL from Cobalt (with fallback)
+        const downloadUrl = await getCobaltDownloadUrl(youtubeUrl);
 
-        const cobaltData = await cobaltResponse.json();
-
-        if (!cobaltData.url) {
-            console.error("Cobalt API Error:", cobaltData);
-            throw new Error(cobaltData.text || "Failed to get download link from Cobalt");
-        }
-
-        const downloadUrl = cobaltData.url;
+        console.log("Downloading audio from:", downloadUrl);
 
         // Fetch the audio stream
         const audioResponse = await fetch(downloadUrl);
-        if (!audioResponse.ok) throw new Error("Failed to fetch audio stream");
+        if (!audioResponse.ok) throw new Error("Failed to fetch audio stream from Cobalt URL");
 
         // Use a default title if not available (Cobalt might not return metadata easily in this endpoint)
         const oembedUrl = `https://www.youtube.com/oembed?url=${youtubeUrl}&format=json`;
