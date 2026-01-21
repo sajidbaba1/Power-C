@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 import { LOCAL_SONGS } from "@/lib/songs";
 import { getPusherClient } from "@/lib/pusher";
 import MusicPlayer from './MusicPlayer';
@@ -229,7 +230,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
             }
         } catch (e) {
             console.error(e);
-            alert("Failed to connect to server");
+            toast.error("Failed to connect to server");
         } finally {
             setIsLoading(false);
         }
@@ -244,14 +245,14 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                 headers: { "Content-Type": "application/json" }
             });
             if (res.ok) {
-                alert("API Key deleted");
+                toast.success("API Key deleted");
                 fetchKeys();
             } else {
-                alert("Failed to delete key");
+                toast.error("Failed to delete key");
             }
         } catch (e) {
             console.error(e);
-            alert("Error deleting key");
+            toast.error("Error deleting key");
         }
     };
 
@@ -269,7 +270,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         e.preventDefault();
         const file = fileInputRef.current?.files?.[0];
         if (!file || !songUploadData.title) {
-            alert("Please provide a title and select an MP3 file");
+            toast.warn("Please provide a title and select an MP3 file");
             return;
         }
 
@@ -314,17 +315,17 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
             });
 
             if (res.ok) {
-                alert("Song uploaded successfully!");
+                toast.success("Song uploaded successfully!");
                 setSongUploadData({ title: "", effect: "none" });
                 if (fileInputRef.current) fileInputRef.current.value = "";
                 fetchSongs();
             } else {
                 const data = await res.json();
-                alert(`Database save failed: ${data.error}`);
+                toast.error(`Database save failed: ${data.error}`);
             }
         } catch (e: any) {
             console.error(e);
-            alert(`Error uploading song: ${e.message}`);
+            toast.error(`Error uploading song: ${e.message}`);
         } finally {
             setIsUploadingSong(false);
         }

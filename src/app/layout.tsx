@@ -31,6 +31,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,6 +51,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <ToastContainer position="bottom-right" theme="dark" />
         </ThemeProvider>
       </body>
     </html>
