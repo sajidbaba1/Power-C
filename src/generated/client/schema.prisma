@@ -169,3 +169,15 @@ model PushSubscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model GeminiKey {
+  id           String    @id @default(cuid())
+  key          String    @unique
+  label        String? // Optional friendly name
+  isActive     Boolean   @default(false) // Only one key should be active at a time
+  lastTested   DateTime?
+  testStatus   String? // 'success', 'failed', 'pending'
+  errorMessage String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}

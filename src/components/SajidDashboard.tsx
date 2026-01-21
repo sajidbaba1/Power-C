@@ -1965,7 +1965,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                 isOpen={showActivities}
                 onClose={() => setShowActivities(false)}
                 userRole="sajid"
-                pusherClient={pusher}
+                partnerName="Nasywa"
             />
         </div >
     );

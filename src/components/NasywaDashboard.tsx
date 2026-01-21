@@ -2070,7 +2070,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                 isOpen={showActivities}
                 onClose={() => setShowActivities(false)}
                 userRole="nasywa"
-                pusherClient={pusher}
+                partnerName="Sajid"
             />
         </div >
     );

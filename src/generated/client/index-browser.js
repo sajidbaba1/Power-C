@@ -278,6 +278,18 @@ exports.Prisma.PushSubscriptionScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.GeminiKeyScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  label: 'label',
+  isActive: 'isActive',
+  lastTested: 'lastTested',
+  testStatus: 'testStatus',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -320,7 +332,8 @@ exports.Prisma.ModelName = {
   PlaylistSong: 'PlaylistSong',
   Activity: 'Activity',
   ActivityComment: 'ActivityComment',
-  PushSubscription: 'PushSubscription'
+  PushSubscription: 'PushSubscription',
+  GeminiKey: 'GeminiKey'
 };
 
 /**

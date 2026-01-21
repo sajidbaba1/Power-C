@@ -88,6 +88,11 @@ export type ActivityComment = $Result.DefaultSelection<Prisma.$ActivityCommentPa
  * 
  */
 export type PushSubscription = $Result.DefaultSelection<Prisma.$PushSubscriptionPayload>
+/**
+ * Model GeminiKey
+ * 
+ */
+export type GeminiKey = $Result.DefaultSelection<Prisma.$GeminiKeyPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -355,6 +360,16 @@ export class PrismaClient<
     * ```
     */
   get pushSubscription(): Prisma.PushSubscriptionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.geminiKey`: Exposes CRUD operations for the **GeminiKey** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more GeminiKeys
+    * const geminiKeys = await prisma.geminiKey.findMany()
+    * ```
+    */
+  get geminiKey(): Prisma.GeminiKeyDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -803,7 +818,8 @@ export namespace Prisma {
     PlaylistSong: 'PlaylistSong',
     Activity: 'Activity',
     ActivityComment: 'ActivityComment',
-    PushSubscription: 'PushSubscription'
+    PushSubscription: 'PushSubscription',
+    GeminiKey: 'GeminiKey'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -819,7 +835,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "apiKey" | "profile" | "message" | "threadComment" | "globalSettings" | "jarNote" | "loveNote" | "milestone" | "loginHistory" | "image" | "chatActivity" | "playlistSong" | "activity" | "activityComment" | "pushSubscription"
+      modelProps: "apiKey" | "profile" | "message" | "threadComment" | "globalSettings" | "jarNote" | "loveNote" | "milestone" | "loginHistory" | "image" | "chatActivity" | "playlistSong" | "activity" | "activityComment" | "pushSubscription" | "geminiKey"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1933,6 +1949,80 @@ export namespace Prisma {
           }
         }
       }
+      GeminiKey: {
+        payload: Prisma.$GeminiKeyPayload<ExtArgs>
+        fields: Prisma.GeminiKeyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.GeminiKeyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.GeminiKeyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>
+          }
+          findFirst: {
+            args: Prisma.GeminiKeyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.GeminiKeyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>
+          }
+          findMany: {
+            args: Prisma.GeminiKeyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>[]
+          }
+          create: {
+            args: Prisma.GeminiKeyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>
+          }
+          createMany: {
+            args: Prisma.GeminiKeyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.GeminiKeyCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>[]
+          }
+          delete: {
+            args: Prisma.GeminiKeyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>
+          }
+          update: {
+            args: Prisma.GeminiKeyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>
+          }
+          deleteMany: {
+            args: Prisma.GeminiKeyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.GeminiKeyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.GeminiKeyUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>[]
+          }
+          upsert: {
+            args: Prisma.GeminiKeyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GeminiKeyPayload>
+          }
+          aggregate: {
+            args: Prisma.GeminiKeyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateGeminiKey>
+          }
+          groupBy: {
+            args: Prisma.GeminiKeyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<GeminiKeyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.GeminiKeyCountArgs<ExtArgs>
+            result: $Utils.Optional<GeminiKeyCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2056,6 +2146,7 @@ export namespace Prisma {
     activity?: ActivityOmit
     activityComment?: ActivityCommentOmit
     pushSubscription?: PushSubscriptionOmit
+    geminiKey?: GeminiKeyOmit
   }
 
   /* Types for Logging */
@@ -17890,6 +17981,1053 @@ export namespace Prisma {
 
 
   /**
+   * Model GeminiKey
+   */
+
+  export type AggregateGeminiKey = {
+    _count: GeminiKeyCountAggregateOutputType | null
+    _min: GeminiKeyMinAggregateOutputType | null
+    _max: GeminiKeyMaxAggregateOutputType | null
+  }
+
+  export type GeminiKeyMinAggregateOutputType = {
+    id: string | null
+    key: string | null
+    label: string | null
+    isActive: boolean | null
+    lastTested: Date | null
+    testStatus: string | null
+    errorMessage: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type GeminiKeyMaxAggregateOutputType = {
+    id: string | null
+    key: string | null
+    label: string | null
+    isActive: boolean | null
+    lastTested: Date | null
+    testStatus: string | null
+    errorMessage: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type GeminiKeyCountAggregateOutputType = {
+    id: number
+    key: number
+    label: number
+    isActive: number
+    lastTested: number
+    testStatus: number
+    errorMessage: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type GeminiKeyMinAggregateInputType = {
+    id?: true
+    key?: true
+    label?: true
+    isActive?: true
+    lastTested?: true
+    testStatus?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type GeminiKeyMaxAggregateInputType = {
+    id?: true
+    key?: true
+    label?: true
+    isActive?: true
+    lastTested?: true
+    testStatus?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type GeminiKeyCountAggregateInputType = {
+    id?: true
+    key?: true
+    label?: true
+    isActive?: true
+    lastTested?: true
+    testStatus?: true
+    errorMessage?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type GeminiKeyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which GeminiKey to aggregate.
+     */
+    where?: GeminiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GeminiKeys to fetch.
+     */
+    orderBy?: GeminiKeyOrderByWithRelationInput | GeminiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: GeminiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GeminiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GeminiKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned GeminiKeys
+    **/
+    _count?: true | GeminiKeyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: GeminiKeyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: GeminiKeyMaxAggregateInputType
+  }
+
+  export type GetGeminiKeyAggregateType<T extends GeminiKeyAggregateArgs> = {
+        [P in keyof T & keyof AggregateGeminiKey]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateGeminiKey[P]>
+      : GetScalarType<T[P], AggregateGeminiKey[P]>
+  }
+
+
+
+
+  export type GeminiKeyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GeminiKeyWhereInput
+    orderBy?: GeminiKeyOrderByWithAggregationInput | GeminiKeyOrderByWithAggregationInput[]
+    by: GeminiKeyScalarFieldEnum[] | GeminiKeyScalarFieldEnum
+    having?: GeminiKeyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: GeminiKeyCountAggregateInputType | true
+    _min?: GeminiKeyMinAggregateInputType
+    _max?: GeminiKeyMaxAggregateInputType
+  }
+
+  export type GeminiKeyGroupByOutputType = {
+    id: string
+    key: string
+    label: string | null
+    isActive: boolean
+    lastTested: Date | null
+    testStatus: string | null
+    errorMessage: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: GeminiKeyCountAggregateOutputType | null
+    _min: GeminiKeyMinAggregateOutputType | null
+    _max: GeminiKeyMaxAggregateOutputType | null
+  }
+
+  type GetGeminiKeyGroupByPayload<T extends GeminiKeyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<GeminiKeyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof GeminiKeyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], GeminiKeyGroupByOutputType[P]>
+            : GetScalarType<T[P], GeminiKeyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type GeminiKeySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    label?: boolean
+    isActive?: boolean
+    lastTested?: boolean
+    testStatus?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["geminiKey"]>
+
+  export type GeminiKeySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    label?: boolean
+    isActive?: boolean
+    lastTested?: boolean
+    testStatus?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["geminiKey"]>
+
+  export type GeminiKeySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    label?: boolean
+    isActive?: boolean
+    lastTested?: boolean
+    testStatus?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["geminiKey"]>
+
+  export type GeminiKeySelectScalar = {
+    id?: boolean
+    key?: boolean
+    label?: boolean
+    isActive?: boolean
+    lastTested?: boolean
+    testStatus?: boolean
+    errorMessage?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type GeminiKeyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "label" | "isActive" | "lastTested" | "testStatus" | "errorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["geminiKey"]>
+
+  export type $GeminiKeyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "GeminiKey"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      key: string
+      label: string | null
+      isActive: boolean
+      lastTested: Date | null
+      testStatus: string | null
+      errorMessage: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["geminiKey"]>
+    composites: {}
+  }
+
+  type GeminiKeyGetPayload<S extends boolean | null | undefined | GeminiKeyDefaultArgs> = $Result.GetResult<Prisma.$GeminiKeyPayload, S>
+
+  type GeminiKeyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<GeminiKeyFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: GeminiKeyCountAggregateInputType | true
+    }
+
+  export interface GeminiKeyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['GeminiKey'], meta: { name: 'GeminiKey' } }
+    /**
+     * Find zero or one GeminiKey that matches the filter.
+     * @param {GeminiKeyFindUniqueArgs} args - Arguments to find a GeminiKey
+     * @example
+     * // Get one GeminiKey
+     * const geminiKey = await prisma.geminiKey.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends GeminiKeyFindUniqueArgs>(args: SelectSubset<T, GeminiKeyFindUniqueArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one GeminiKey that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {GeminiKeyFindUniqueOrThrowArgs} args - Arguments to find a GeminiKey
+     * @example
+     * // Get one GeminiKey
+     * const geminiKey = await prisma.geminiKey.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends GeminiKeyFindUniqueOrThrowArgs>(args: SelectSubset<T, GeminiKeyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first GeminiKey that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GeminiKeyFindFirstArgs} args - Arguments to find a GeminiKey
+     * @example
+     * // Get one GeminiKey
+     * const geminiKey = await prisma.geminiKey.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends GeminiKeyFindFirstArgs>(args?: SelectSubset<T, GeminiKeyFindFirstArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first GeminiKey that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GeminiKeyFindFirstOrThrowArgs} args - Arguments to find a GeminiKey
+     * @example
+     * // Get one GeminiKey
+     * const geminiKey = await prisma.geminiKey.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends GeminiKeyFindFirstOrThrowArgs>(args?: SelectSubset<T, GeminiKeyFindFirstOrThrowArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more GeminiKeys that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GeminiKeyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all GeminiKeys
+     * const geminiKeys = await prisma.geminiKey.findMany()
+     * 
+     * // Get first 10 GeminiKeys
+     * const geminiKeys = await prisma.geminiKey.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const geminiKeyWithIdOnly = await prisma.geminiKey.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends GeminiKeyFindManyArgs>(args?: SelectSubset<T, GeminiKeyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a GeminiKey.
+     * @param {GeminiKeyCreateArgs} args - Arguments to create a GeminiKey.
+     * @example
+     * // Create one GeminiKey
+     * const GeminiKey = await prisma.geminiKey.create({
+     *   data: {
+     *     // ... data to create a GeminiKey
+     *   }
+     * })
+     * 
+     */
+    create<T extends GeminiKeyCreateArgs>(args: SelectSubset<T, GeminiKeyCreateArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many GeminiKeys.
+     * @param {GeminiKeyCreateManyArgs} args - Arguments to create many GeminiKeys.
+     * @example
+     * // Create many GeminiKeys
+     * const geminiKey = await prisma.geminiKey.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends GeminiKeyCreateManyArgs>(args?: SelectSubset<T, GeminiKeyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many GeminiKeys and returns the data saved in the database.
+     * @param {GeminiKeyCreateManyAndReturnArgs} args - Arguments to create many GeminiKeys.
+     * @example
+     * // Create many GeminiKeys
+     * const geminiKey = await prisma.geminiKey.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many GeminiKeys and only return the `id`
+     * const geminiKeyWithIdOnly = await prisma.geminiKey.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends GeminiKeyCreateManyAndReturnArgs>(args?: SelectSubset<T, GeminiKeyCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a GeminiKey.
+     * @param {GeminiKeyDeleteArgs} args - Arguments to delete one GeminiKey.
+     * @example
+     * // Delete one GeminiKey
+     * const GeminiKey = await prisma.geminiKey.delete({
+     *   where: {
+     *     // ... filter to delete one GeminiKey
+     *   }
+     * })
+     * 
+     */
+    delete<T extends GeminiKeyDeleteArgs>(args: SelectSubset<T, GeminiKeyDeleteArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one GeminiKey.
+     * @param {GeminiKeyUpdateArgs} args - Arguments to update one GeminiKey.
+     * @example
+     * // Update one GeminiKey
+     * const geminiKey = await prisma.geminiKey.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends GeminiKeyUpdateArgs>(args: SelectSubset<T, GeminiKeyUpdateArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more GeminiKeys.
+     * @param {GeminiKeyDeleteManyArgs} args - Arguments to filter GeminiKeys to delete.
+     * @example
+     * // Delete a few GeminiKeys
+     * const { count } = await prisma.geminiKey.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends GeminiKeyDeleteManyArgs>(args?: SelectSubset<T, GeminiKeyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more GeminiKeys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GeminiKeyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many GeminiKeys
+     * const geminiKey = await prisma.geminiKey.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends GeminiKeyUpdateManyArgs>(args: SelectSubset<T, GeminiKeyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more GeminiKeys and returns the data updated in the database.
+     * @param {GeminiKeyUpdateManyAndReturnArgs} args - Arguments to update many GeminiKeys.
+     * @example
+     * // Update many GeminiKeys
+     * const geminiKey = await prisma.geminiKey.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more GeminiKeys and only return the `id`
+     * const geminiKeyWithIdOnly = await prisma.geminiKey.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends GeminiKeyUpdateManyAndReturnArgs>(args: SelectSubset<T, GeminiKeyUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one GeminiKey.
+     * @param {GeminiKeyUpsertArgs} args - Arguments to update or create a GeminiKey.
+     * @example
+     * // Update or create a GeminiKey
+     * const geminiKey = await prisma.geminiKey.upsert({
+     *   create: {
+     *     // ... data to create a GeminiKey
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the GeminiKey we want to update
+     *   }
+     * })
+     */
+    upsert<T extends GeminiKeyUpsertArgs>(args: SelectSubset<T, GeminiKeyUpsertArgs<ExtArgs>>): Prisma__GeminiKeyClient<$Result.GetResult<Prisma.$GeminiKeyPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of GeminiKeys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GeminiKeyCountArgs} args - Arguments to filter GeminiKeys to count.
+     * @example
+     * // Count the number of GeminiKeys
+     * const count = await prisma.geminiKey.count({
+     *   where: {
+     *     // ... the filter for the GeminiKeys we want to count
+     *   }
+     * })
+    **/
+    count<T extends GeminiKeyCountArgs>(
+      args?: Subset<T, GeminiKeyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], GeminiKeyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a GeminiKey.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GeminiKeyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends GeminiKeyAggregateArgs>(args: Subset<T, GeminiKeyAggregateArgs>): Prisma.PrismaPromise<GetGeminiKeyAggregateType<T>>
+
+    /**
+     * Group by GeminiKey.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GeminiKeyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends GeminiKeyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: GeminiKeyGroupByArgs['orderBy'] }
+        : { orderBy?: GeminiKeyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, GeminiKeyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetGeminiKeyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the GeminiKey model
+   */
+  readonly fields: GeminiKeyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for GeminiKey.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__GeminiKeyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the GeminiKey model
+   */
+  interface GeminiKeyFieldRefs {
+    readonly id: FieldRef<"GeminiKey", 'String'>
+    readonly key: FieldRef<"GeminiKey", 'String'>
+    readonly label: FieldRef<"GeminiKey", 'String'>
+    readonly isActive: FieldRef<"GeminiKey", 'Boolean'>
+    readonly lastTested: FieldRef<"GeminiKey", 'DateTime'>
+    readonly testStatus: FieldRef<"GeminiKey", 'String'>
+    readonly errorMessage: FieldRef<"GeminiKey", 'String'>
+    readonly createdAt: FieldRef<"GeminiKey", 'DateTime'>
+    readonly updatedAt: FieldRef<"GeminiKey", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * GeminiKey findUnique
+   */
+  export type GeminiKeyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which GeminiKey to fetch.
+     */
+    where: GeminiKeyWhereUniqueInput
+  }
+
+  /**
+   * GeminiKey findUniqueOrThrow
+   */
+  export type GeminiKeyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which GeminiKey to fetch.
+     */
+    where: GeminiKeyWhereUniqueInput
+  }
+
+  /**
+   * GeminiKey findFirst
+   */
+  export type GeminiKeyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which GeminiKey to fetch.
+     */
+    where?: GeminiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GeminiKeys to fetch.
+     */
+    orderBy?: GeminiKeyOrderByWithRelationInput | GeminiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for GeminiKeys.
+     */
+    cursor?: GeminiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GeminiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GeminiKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of GeminiKeys.
+     */
+    distinct?: GeminiKeyScalarFieldEnum | GeminiKeyScalarFieldEnum[]
+  }
+
+  /**
+   * GeminiKey findFirstOrThrow
+   */
+  export type GeminiKeyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which GeminiKey to fetch.
+     */
+    where?: GeminiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GeminiKeys to fetch.
+     */
+    orderBy?: GeminiKeyOrderByWithRelationInput | GeminiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for GeminiKeys.
+     */
+    cursor?: GeminiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GeminiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GeminiKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of GeminiKeys.
+     */
+    distinct?: GeminiKeyScalarFieldEnum | GeminiKeyScalarFieldEnum[]
+  }
+
+  /**
+   * GeminiKey findMany
+   */
+  export type GeminiKeyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * Filter, which GeminiKeys to fetch.
+     */
+    where?: GeminiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GeminiKeys to fetch.
+     */
+    orderBy?: GeminiKeyOrderByWithRelationInput | GeminiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing GeminiKeys.
+     */
+    cursor?: GeminiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GeminiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GeminiKeys.
+     */
+    skip?: number
+    distinct?: GeminiKeyScalarFieldEnum | GeminiKeyScalarFieldEnum[]
+  }
+
+  /**
+   * GeminiKey create
+   */
+  export type GeminiKeyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * The data needed to create a GeminiKey.
+     */
+    data: XOR<GeminiKeyCreateInput, GeminiKeyUncheckedCreateInput>
+  }
+
+  /**
+   * GeminiKey createMany
+   */
+  export type GeminiKeyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many GeminiKeys.
+     */
+    data: GeminiKeyCreateManyInput | GeminiKeyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * GeminiKey createManyAndReturn
+   */
+  export type GeminiKeyCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * The data used to create many GeminiKeys.
+     */
+    data: GeminiKeyCreateManyInput | GeminiKeyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * GeminiKey update
+   */
+  export type GeminiKeyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * The data needed to update a GeminiKey.
+     */
+    data: XOR<GeminiKeyUpdateInput, GeminiKeyUncheckedUpdateInput>
+    /**
+     * Choose, which GeminiKey to update.
+     */
+    where: GeminiKeyWhereUniqueInput
+  }
+
+  /**
+   * GeminiKey updateMany
+   */
+  export type GeminiKeyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update GeminiKeys.
+     */
+    data: XOR<GeminiKeyUpdateManyMutationInput, GeminiKeyUncheckedUpdateManyInput>
+    /**
+     * Filter which GeminiKeys to update
+     */
+    where?: GeminiKeyWhereInput
+    /**
+     * Limit how many GeminiKeys to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * GeminiKey updateManyAndReturn
+   */
+  export type GeminiKeyUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * The data used to update GeminiKeys.
+     */
+    data: XOR<GeminiKeyUpdateManyMutationInput, GeminiKeyUncheckedUpdateManyInput>
+    /**
+     * Filter which GeminiKeys to update
+     */
+    where?: GeminiKeyWhereInput
+    /**
+     * Limit how many GeminiKeys to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * GeminiKey upsert
+   */
+  export type GeminiKeyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * The filter to search for the GeminiKey to update in case it exists.
+     */
+    where: GeminiKeyWhereUniqueInput
+    /**
+     * In case the GeminiKey found by the `where` argument doesn't exist, create a new GeminiKey with this data.
+     */
+    create: XOR<GeminiKeyCreateInput, GeminiKeyUncheckedCreateInput>
+    /**
+     * In case the GeminiKey was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<GeminiKeyUpdateInput, GeminiKeyUncheckedUpdateInput>
+  }
+
+  /**
+   * GeminiKey delete
+   */
+  export type GeminiKeyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+    /**
+     * Filter which GeminiKey to delete.
+     */
+    where: GeminiKeyWhereUniqueInput
+  }
+
+  /**
+   * GeminiKey deleteMany
+   */
+  export type GeminiKeyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which GeminiKeys to delete
+     */
+    where?: GeminiKeyWhereInput
+    /**
+     * Limit how many GeminiKeys to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * GeminiKey without action
+   */
+  export type GeminiKeyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GeminiKey
+     */
+    select?: GeminiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GeminiKey
+     */
+    omit?: GeminiKeyOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -18104,6 +19242,21 @@ export namespace Prisma {
   };
 
   export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
+
+
+  export const GeminiKeyScalarFieldEnum: {
+    id: 'id',
+    key: 'key',
+    label: 'label',
+    isActive: 'isActive',
+    lastTested: 'lastTested',
+    testStatus: 'testStatus',
+    errorMessage: 'errorMessage',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type GeminiKeyScalarFieldEnum = (typeof GeminiKeyScalarFieldEnum)[keyof typeof GeminiKeyScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -19218,6 +20371,78 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"PushSubscription"> | Date | string
   }
 
+  export type GeminiKeyWhereInput = {
+    AND?: GeminiKeyWhereInput | GeminiKeyWhereInput[]
+    OR?: GeminiKeyWhereInput[]
+    NOT?: GeminiKeyWhereInput | GeminiKeyWhereInput[]
+    id?: StringFilter<"GeminiKey"> | string
+    key?: StringFilter<"GeminiKey"> | string
+    label?: StringNullableFilter<"GeminiKey"> | string | null
+    isActive?: BoolFilter<"GeminiKey"> | boolean
+    lastTested?: DateTimeNullableFilter<"GeminiKey"> | Date | string | null
+    testStatus?: StringNullableFilter<"GeminiKey"> | string | null
+    errorMessage?: StringNullableFilter<"GeminiKey"> | string | null
+    createdAt?: DateTimeFilter<"GeminiKey"> | Date | string
+    updatedAt?: DateTimeFilter<"GeminiKey"> | Date | string
+  }
+
+  export type GeminiKeyOrderByWithRelationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    label?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    lastTested?: SortOrderInput | SortOrder
+    testStatus?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GeminiKeyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    key?: string
+    AND?: GeminiKeyWhereInput | GeminiKeyWhereInput[]
+    OR?: GeminiKeyWhereInput[]
+    NOT?: GeminiKeyWhereInput | GeminiKeyWhereInput[]
+    label?: StringNullableFilter<"GeminiKey"> | string | null
+    isActive?: BoolFilter<"GeminiKey"> | boolean
+    lastTested?: DateTimeNullableFilter<"GeminiKey"> | Date | string | null
+    testStatus?: StringNullableFilter<"GeminiKey"> | string | null
+    errorMessage?: StringNullableFilter<"GeminiKey"> | string | null
+    createdAt?: DateTimeFilter<"GeminiKey"> | Date | string
+    updatedAt?: DateTimeFilter<"GeminiKey"> | Date | string
+  }, "id" | "key">
+
+  export type GeminiKeyOrderByWithAggregationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    label?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    lastTested?: SortOrderInput | SortOrder
+    testStatus?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: GeminiKeyCountOrderByAggregateInput
+    _max?: GeminiKeyMaxOrderByAggregateInput
+    _min?: GeminiKeyMinOrderByAggregateInput
+  }
+
+  export type GeminiKeyScalarWhereWithAggregatesInput = {
+    AND?: GeminiKeyScalarWhereWithAggregatesInput | GeminiKeyScalarWhereWithAggregatesInput[]
+    OR?: GeminiKeyScalarWhereWithAggregatesInput[]
+    NOT?: GeminiKeyScalarWhereWithAggregatesInput | GeminiKeyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"GeminiKey"> | string
+    key?: StringWithAggregatesFilter<"GeminiKey"> | string
+    label?: StringNullableWithAggregatesFilter<"GeminiKey"> | string | null
+    isActive?: BoolWithAggregatesFilter<"GeminiKey"> | boolean
+    lastTested?: DateTimeNullableWithAggregatesFilter<"GeminiKey"> | Date | string | null
+    testStatus?: StringNullableWithAggregatesFilter<"GeminiKey"> | string | null
+    errorMessage?: StringNullableWithAggregatesFilter<"GeminiKey"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"GeminiKey"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"GeminiKey"> | Date | string
+  }
+
   export type ApiKeyCreateInput = {
     id?: string
     key: string
@@ -20327,6 +21552,90 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type GeminiKeyCreateInput = {
+    id?: string
+    key: string
+    label?: string | null
+    isActive?: boolean
+    lastTested?: Date | string | null
+    testStatus?: string | null
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GeminiKeyUncheckedCreateInput = {
+    id?: string
+    key: string
+    label?: string | null
+    isActive?: boolean
+    lastTested?: Date | string | null
+    testStatus?: string | null
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GeminiKeyUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastTested?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    testStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GeminiKeyUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastTested?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    testStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GeminiKeyCreateManyInput = {
+    id?: string
+    key: string
+    label?: string | null
+    isActive?: boolean
+    lastTested?: Date | string | null
+    testStatus?: string | null
+    errorMessage?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GeminiKeyUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastTested?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    testStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GeminiKeyUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastTested?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    testStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -21114,6 +22423,42 @@ export namespace Prisma {
     endpoint?: SortOrder
     p256dh?: SortOrder
     auth?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GeminiKeyCountOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    isActive?: SortOrder
+    lastTested?: SortOrder
+    testStatus?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GeminiKeyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    isActive?: SortOrder
+    lastTested?: SortOrder
+    testStatus?: SortOrder
+    errorMessage?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GeminiKeyMinOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    isActive?: SortOrder
+    lastTested?: SortOrder
+    testStatus?: SortOrder
+    errorMessage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
