@@ -101,19 +101,21 @@ export async function DELETE(req: Request) {
 
 // Helper function to test a Gemini API key
 async function testGeminiKey(apiKey: string): Promise<{ success: boolean; error?: string }> {
-    // Try primary model (Flash - fast and cheap)
-    let result = await tryModel(apiKey, "gemini-1.5-flash");
-    if (result.success) return result;
+    // List of models to try in order
+    // gemini-pro is often deprecated in v1beta/v1 in favor of 1.0-pro or 1.5-flash
+    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
+    let lastError = "No models available";
 
-    console.log("Gemini Flash test failed, trying Pro:", result.error);
-
-    // Try fallback model (Pro - standard)
-    result = await tryModel(apiKey, "gemini-pro");
-    if (result.success) return result;
+    for (const model of models) {
+        const result = await tryModel(apiKey, model);
+        if (result.success) return result;
+        lastError = result.error || "Unknown error";
+        console.log(`Model ${model} failed:`, lastError);
+    }
 
     return {
         success: false,
-        error: `Validation failed: ${result.error}`
+        error: `Validation failed using [${models.join(', ')}]. Last error: ${lastError}`
     };
 }
 
