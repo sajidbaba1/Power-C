@@ -1365,21 +1365,6 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                     )
                 } >
                     <div className="flex flex-col gap-2">
-                        {replyingTo && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="glass border-l-4 border-l-primary p-3 rounded-2xl mb-2 flex items-center justify-between"
-                            >
-                                <div className="flex-1 overflow-hidden">
-                                    <p className="text-[10px] font-bold text-primary uppercase">Replying to {replyingTo.sender}</p>
-                                    <p className="text-xs text-muted-foreground truncate">{replyingTo.text}</p>
-                                </div>
-                                <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-muted rounded-full">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </motion.div>
-                        )}
                         {showStickers && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}

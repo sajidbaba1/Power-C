@@ -125,7 +125,7 @@ export default function ChatInput({
                 )}
             </AnimatePresence>
 
-            <div className="p-4 lg:p-6 bg-card/50 backdrop-blur-xl border-t border-white/5 relative z-20">
+            <div className="p-2 lg:p-6 bg-card/50 backdrop-blur-xl border-t border-white/5 relative z-20">
                 {/* Replying To Preview */}
                 <AnimatePresence>
                     {replyingTo && (
@@ -133,7 +133,7 @@ export default function ChatInput({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="absolute bottom-full left-4 right-4 mb-2 p-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-between gap-3 shadow-2xl"
+                            className="absolute bottom-full left-2 right-2 lg:left-4 lg:right-4 mb-2 p-3 bg-zinc-900 border border-white/10 rounded-2xl flex items-center justify-between gap-3 shadow-2xl z-30"
                         >
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] uppercase font-black tracking-widest text-primary mb-1">Replying to</p>
@@ -146,7 +146,7 @@ export default function ChatInput({
                     )}
                 </AnimatePresence>
 
-                <div className="relative flex items-end gap-2 lg:gap-4 max-w-6xl mx-auto">
+                <div className="relative flex items-end gap-1.5 lg:gap-4 max-w-6xl mx-auto w-full">
                     <div className="flex-1 relative bg-white/5 border border-white/10 rounded-[2rem] flex items-end p-2 transition-all focus-within:border-primary/50 focus-within:bg-white/10 shadow-inner group">
 
                         <AnimatePresence initial={false}>

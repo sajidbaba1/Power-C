@@ -1490,27 +1490,6 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                     )
                 } >
                     <div className="flex flex-col gap-2">
-                        {replyingTo && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                className="bg-zinc-900/60 backdrop-blur-xl border-l-4 border-l-primary p-4 rounded-2xl mb-3 flex items-center justify-between shadow-2xl border border-white/5"
-                            >
-                                <div className="flex-1 overflow-hidden">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <RotateCcw className="w-3 h-3 text-primary" />
-                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest">Replying to {replyingTo.sender}</p>
-                                    </div>
-                                    <p className="text-sm text-white/70 truncate font-medium leading-none">{replyingTo.text}</p>
-                                </div>
-                                <button
-                                    onClick={() => setReplyingTo(null)}
-                                    className="p-2 hover:bg-white/10 rounded-full transition-colors ml-4 group"
-                                >
-                                    <X className="w-5 h-5 text-muted-foreground group-hover:text-white transition-colors" />
-                                </button>
-                            </motion.div>
-                        )}
                         {/* Chat Input Section */}
                         <ChatInput
                             onSend={(text, isSecret) => handleSend(text, false, isSecret)}
