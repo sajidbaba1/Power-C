@@ -104,8 +104,8 @@ async function testGeminiKey(apiKey: string): Promise<{ success: boolean; error?
     // List of models to try in order
     // Includes Gemini 2.0 Flash (Experimental) and standard models
     const models = [
-        "gemini-2.0-flash-exp",
-        "gemini-1.5-flash",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash",
         "gemini-1.5-pro",
         "gemini-1.0-pro"
     ];

@@ -199,8 +199,8 @@ const MessageBubble = memo(({
                         ) : (
                             <>
                                 {msg.text}
-                                {msg.translation && !isMe && msg.translation.toLowerCase() !== msg.text.toLowerCase() && (
-                                    <div className="mt-2 pt-2 border-t border-white/10 text-[13px] text-muted-foreground italic leading-tight">
+                                {msg.translation && msg.translation.toLowerCase() !== msg.text.toLowerCase() && (
+                                    <div className="mt-2 text-[12px] text-white/60 font-medium">
                                         {msg.translation}
                                     </div>
                                 )}

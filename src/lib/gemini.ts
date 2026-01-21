@@ -60,7 +60,7 @@ export async function translateAndAnalyze(text: string, sourceLang: string, targ
         try {
             console.log(`Attempt ${i + 1}/${keys.length} using key: ${apiKey.substring(0, 8)}...`);
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
             const isHindiTarget = targetLang.toLowerCase() === "hindi";
             const prompt = `
