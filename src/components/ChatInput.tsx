@@ -193,6 +193,59 @@ export default function ChatInput({
                                 >
                                     <button onClick={() => { onShowStickers(); setShowMoreActions(false); }} className="p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><Smile className="w-5 h-5 text-yellow-400" /><span className="text-xs font-bold font-inter">Stickers</span></button>
                                     <button onClick={() => { onShowDrawing(); setShowMoreActions(false); }} className="p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><Palette className="w-5 h-5 text-indigo-400" /><span className="text-xs font-bold font-inter">Draw</span></button>
+
+                                    {/* Big Hug & Big Kiss */}
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                            onSend("🤗 BIG HUG! 🤗", false);
+                                            setShowMoreActions(false);
+                                        }}
+                                        className="p-3 hover:bg-blue-500/10 rounded-xl flex items-center gap-3 group bg-gradient-to-r from-blue-500/5 to-cyan-500/5 border border-blue-500/20"
+                                    >
+                                        <Ghost className="w-5 h-5 text-blue-500 group-hover:scale-125 transition-transform" />
+                                        <span className="text-xs font-bold font-inter text-blue-400">BIG HUG</span>
+                                    </motion.button>
+
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                            onSend("💋 BIG KISS! 💋", false);
+                                            setShowMoreActions(false);
+                                        }}
+                                        className="p-3 hover:bg-pink-500/10 rounded-xl flex items-center gap-3 group bg-gradient-to-r from-pink-500/5 to-rose-500/5 border border-pink-500/20"
+                                    >
+                                        <Flame className="w-5 h-5 text-pink-500 group-hover:scale-125 transition-transform" />
+                                        <span className="text-xs font-bold font-inter text-pink-400">BIG KISS</span>
+                                    </motion.button>
+
+                                    {/* Love You Rocket Animations */}
+                                    <motion.button
+                                        whileHover={{ x: 5 }}
+                                        onClick={() => {
+                                            onSend("Love You Nasywa ❤️🚀", false);
+                                            setShowMoreActions(false);
+                                        }}
+                                        className="p-3 hover:bg-rose-500/10 rounded-xl flex items-center gap-3 group bg-gradient-to-r from-rose-500/5 to-red-500/5 border border-rose-500/20"
+                                    >
+                                        <Heart className="w-5 h-5 text-rose-500 group-hover:scale-110 transition-transform animate-pulse" />
+                                        <span className="text-xs font-bold font-inter text-rose-400">Love You Nasywa 🚀</span>
+                                    </motion.button>
+
+                                    <motion.button
+                                        whileHover={{ x: 5 }}
+                                        onClick={() => {
+                                            onSend("Love You Sajid ❤️🚀", false);
+                                            setShowMoreActions(false);
+                                        }}
+                                        className="p-3 hover:bg-indigo-500/10 rounded-xl flex items-center gap-3 group bg-gradient-to-r from-indigo-500/5 to-blue-500/5 border border-indigo-500/20"
+                                    >
+                                        <Heart className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform animate-pulse" />
+                                        <span className="text-xs font-bold font-inter text-indigo-400">Love You Sajid 🚀</span>
+                                    </motion.button>
+
                                     <motion.button whileHover={{ x: 5 }} onClick={() => { onSendHug(); setShowMoreActions(false); }} className="p-3 hover:bg-blue-500/10 rounded-xl flex items-center gap-3 group"><Ghost className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" /><span className="text-xs font-bold font-inter">Send Hug</span></motion.button>
                                     <motion.button whileHover={{ x: 5 }} onClick={() => { onSendKiss(); setShowMoreActions(false); }} className="p-3 hover:bg-pink-500/10 rounded-xl flex items-center gap-3 group"><Flame className="w-5 h-5 text-pink-500 group-hover:scale-110 transition-transform" /><span className="text-xs font-bold font-inter">Send Kiss</span></motion.button>
                                     <button
