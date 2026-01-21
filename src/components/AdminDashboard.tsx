@@ -274,16 +274,45 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         }
 
         setIsUploadingSong(true);
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", songUploadData.title);
-        formData.append("effect", songUploadData.effect);
 
         try {
+            // 1. Get signature from our backend
+            const signRes = await fetch("/api/admin/songs/sign", { method: "POST" });
+            const { signature, timestamp, cloudName, apiKey } = await signRes.json();
+
+            // 2. Upload directly to Cloudinary
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("signature", signature);
+            formData.append("timestamp", timestamp);
+            formData.append("api_key", apiKey);
+            formData.append("folder", "power-couple/songs");
+
+            const cloudinaryRes = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+            const cloudinaryData = await cloudinaryRes.json();
+
+            if (!cloudinaryRes.ok) {
+                throw new Error(cloudinaryData.error?.message || "Cloudinary upload failed");
+            }
+
+            // 3. Save URL to our database
             const res = await fetch("/api/admin/songs", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: cloudinaryData.secure_url,
+                    title: songUploadData.title,
+                    effect: songUploadData.effect,
+                }),
             });
+
             if (res.ok) {
                 alert("Song uploaded successfully!");
                 setSongUploadData({ title: "", effect: "none" });
@@ -291,11 +320,11 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                 fetchSongs();
             } else {
                 const data = await res.json();
-                alert(`Upload failed: ${data.error}`);
+                alert(`Database save failed: ${data.error}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Error uploading song");
+            alert(`Error uploading song: ${e.message}`);
         } finally {
             setIsUploadingSong(false);
         }
