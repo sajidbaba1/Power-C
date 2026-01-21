@@ -980,6 +980,19 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
             triggerFirework("Love you Sajid Rocker! 🚀");
         }
 
+        // Send email notification when Sajid says "missing you"
+        if (text.toLowerCase().includes("missing you") && activeChat === "nasywa") {
+            fetch("/api/send-missing-you", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sender: "Sajid",
+                    recipient: "nasywanazhifariyandi@gmail.com",
+                    message: text
+                })
+            }).catch(err => console.error("Failed to send missing you email:", err));
+        }
+
         // Trigger Greetings
         const lowerText = text.toLowerCase();
         if (lowerText.includes("good morning")) sendGreeting("goodmorning");
