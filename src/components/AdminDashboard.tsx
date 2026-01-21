@@ -1107,6 +1107,109 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
 
                             {/* Song Selection */}
                             <div className="pt-8 border-t border-white/10">
+
+                                {/* YouTube Downloader */}
+                                <div className="p-6 bg-gradient-to-br from-red-500/10 to-pink-500/10 border border-red-500/20 rounded-2xl mb-8">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-400">
+                                        <Music className="w-5 h-5" />
+                                        YouTube to MP3 Downloader
+                                    </h3>
+                                    <form
+                                        onSubmit={async (e) => {
+                                            e.preventDefault();
+                                            const formData = new FormData(e.currentTarget);
+                                            const youtubeUrl = formData.get('youtubeUrl') as string;
+
+                                            if (!youtubeUrl?.trim()) {
+                                                toast.error("Please enter a YouTube URL");
+                                                return;
+                                            }
+
+                                            setIsUploadingSong(true);
+                                            try {
+                                                toast.info("🎵 Downloading from YouTube...");
+                                                const res = await fetch('/api/admin/youtube-download', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ youtubeUrl })
+                                                });
+
+                                                if (!res.ok) {
+                                                    const error = await res.json();
+                                                    throw new Error(error.error || 'Download failed');
+                                                }
+
+                                                const data = await res.json();
+
+                                                toast.info("💾 Adding to library...");
+                                                // Now upload to database
+                                                const uploadRes = await fetch('/api/admin/songs', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        url: data.url,
+                                                        title: data.title,
+                                                        effect: songUploadData.effect || 'none',
+                                                        chatKey: 'sajid-nasywa'
+                                                    })
+                                                });
+
+                                                if (uploadRes.ok) {
+                                                    toast.success(`✅ "${data.title}" added to library!`);
+                                                    fetchSongs();
+                                                    (e.target as HTMLFormElement).reset();
+                                                }
+                                            } catch (error: any) {
+                                                toast.error(`❌ ${error.message}`);
+                                            } finally {
+                                                setIsUploadingSong(false);
+                                            }
+                                        }}
+                                        className="space-y-4"
+                                    >
+                                        <div>
+                                            <input
+                                                type="text"
+                                                name="youtubeUrl"
+                                                placeholder="Paste YouTube URL here (e.g., https://youtube.com/watch?v=...)"
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50 transition-all"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <select
+                                                value={songUploadData.effect}
+                                                onChange={(e) => setSongUploadData(prev => ({ ...prev, effect: e.target.value as any }))}
+                                                className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500/50"
+                                            >
+                                                <option value="none">No Effect</option>
+                                                <option value="snow">❄️ Snow</option>
+                                                <option value="rain">🌧️ Rain</option>
+                                                <option value="hearts">❤️ Hearts</option>
+                                                <option value="stars">⭐ Stars</option>
+                                                <option value="sparkles">✨ Sparkles</option>
+                                                <option value="butterflies">🦋 Butterflies</option>
+                                            </select>
+                                            <button
+                                                type="submit"
+                                                disabled={isUploadingSong}
+                                                className="px-6 py-3 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-red-500/30"
+                                            >
+                                                {isUploadingSong ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        Processing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Music className="w-4 h-4" />
+                                                        Download & Add
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                                     <h2 className="text-lg font-bold flex items-center gap-2">
                                         <Music className="w-5 h-5 text-indigo-400" />
