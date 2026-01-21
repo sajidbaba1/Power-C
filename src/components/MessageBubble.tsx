@@ -136,7 +136,7 @@ const MessageBubble = memo(({
                         "absolute bottom-full mb-3 flex gap-1 bg-card/95 backdrop-blur-xl p-2 rounded-2xl border border-white/20 shadow-2xl transition-all z-[100]",
                         isActive
                             ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                            : "opacity-0 scale-90 translate-y-2 pointer-events-none lg:pointer-events-auto lg:group-hover/msg:opacity-100 lg:group-hover/msg:scale-100 lg:group-hover/msg:translate-y-0",
+                            : "opacity-0 scale-90 translate-y-2 pointer-events-none lg:group-hover/msg:opacity-100 lg:group-hover/msg:scale-100 lg:group-hover/msg:translate-y-0 lg:group-hover/msg:pointer-events-auto",
                         isMe ? "right-0" : "left-0"
                     )}>
                         {["❤️", "😂", "😮", "🔥", "😢"].map(emoji => (

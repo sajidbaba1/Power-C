@@ -155,7 +155,7 @@ export default function ChatInput({
                     <div className="flex-1 relative bg-white/5 border border-white/10 rounded-[2rem] flex items-end p-1.5 lg:p-2 transition-all focus-within:border-primary/50 focus-within:bg-white/10 shadow-inner group overflow-hidden">
 
                         <AnimatePresence initial={false}>
-                            {!text && (
+                            {(!text || window.innerWidth < 1024) && (
                                 <motion.div
                                     initial={{ width: 0, opacity: 0 }}
                                     animate={{ width: "auto", opacity: 1 }}
@@ -164,7 +164,8 @@ export default function ChatInput({
                                 >
                                     <button
                                         onClick={onImageUpload}
-                                        className="p-2 lg:p-3 hover:bg-white/10 rounded-full transition-all shrink-0 text-muted-foreground"
+                                        type="button"
+                                        className="p-2.5 lg:p-3 hover:bg-white/10 active:bg-white/20 rounded-full transition-all shrink-0 text-muted-foreground touch-manipulation"
                                     >
                                         <ImageIcon className="w-5 h-5 lg:w-5 lg:h-5" />
                                     </button>
@@ -175,8 +176,9 @@ export default function ChatInput({
 
                         <button
                             onClick={() => setShowMoreActions(!showMoreActions)}
+                            type="button"
                             className={cn(
-                                "p-2 lg:p-3 hover:bg-white/10 rounded-full transition-all shrink-0",
+                                "p-2.5 lg:p-3 hover:bg-white/10 active:bg-white/20 rounded-full transition-all shrink-0 touch-manipulation",
                                 showMoreActions ? "bg-primary/20 text-primary rotate-45" : "text-muted-foreground"
                             )}
                         >
