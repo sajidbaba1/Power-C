@@ -978,69 +978,67 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
             body: JSON.stringify({ role: "sajid" })
         }).catch(err => console.error("Failed to record streak:", err));
 
-        // 3. Request translation (background)
-        try {
-            console.log("Requesting translation...");
-            const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    text: text,
-                    sourceLang: "English",
-                    targetLang: "Indonesian"
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error("Translation API error:", errorData);
-                throw new Error("Translation failed");
-            }
-
-            const data = await response.json();
-            console.log("📝 Translation response:", JSON.stringify(data).substring(0, 200));
-
-            const updatedMessage = {
-                ...userMessage,
-                translation: data.translation || "No translation",
-                hindiTranslation: data.hindiTranslation,
-                wordBreakdown: data.wordBreakdown || [],
-                status: "sent"
-            };
-
-            // Update local state with translation
-            setMessages((prev) => ({
-                ...prev,
-                [activeChat]: prev[activeChat].map((msg) =>
-                    msg.id === userMessage.id ? updatedMessage : msg
-                )
-            }));
-
-            // Save translation back to store
-            fetch("/api/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user1: "sajid",
-                    user2: activeChat,
-                    message: updatedMessage
-                })
-            }).catch(err => console.error("Final sync failed:", err));
-
-            // Word breakdown logic
-            if (data.wordBreakdown && Array.isArray(data.wordBreakdown)) {
-                setLearnedWords((prev) => {
-                    const newWords = data.wordBreakdown.filter((newWord: any) =>
-                        !prev.some((w) => (w.word || "").toLowerCase() === (newWord.word || "").toLowerCase())
-                    );
-                    return [...prev, ...newWords];
+        // 3. Request translation in background (Non-blocking)
+        (async () => {
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        text: text,
+                        sourceLang: "English",
+                        targetLang: "Indonesian"
+                    }),
                 });
-            }
 
-        } catch (error: any) {
-            console.error("Translation failed:", error);
-            // English message is already saved and displayed, so we don't mark as error
-        }
+                if (!response.ok) return;
+
+                const data = await response.json();
+
+                const updatedMessage = {
+                    ...userMessage,
+                    translation: data.translation || "No translation",
+                    hindiTranslation: data.hindiTranslation,
+                    wordBreakdown: data.wordBreakdown || [],
+                    status: "sent"
+                };
+
+                // Update local state with translation
+                setMessages((prev) => {
+                    const currentChat = prev[activeChat] || [];
+                    const index = currentChat.findIndex(m => m.id === userMessage.id);
+                    if (index === -1) return prev;
+
+                    const newChat = [...currentChat];
+                    newChat[index] = updatedMessage;
+                    return { ...prev, [activeChat]: newChat };
+                });
+
+                // Save translation back to store
+                fetch("/api/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        user1: "sajid",
+                        user2: activeChat,
+                        message: updatedMessage
+                    })
+                }).catch(() => { });
+
+                // Word breakdown logic
+                if (data.wordBreakdown && Array.isArray(data.wordBreakdown)) {
+                    setLearnedWords((prev) => {
+                        const newWords = data.wordBreakdown.filter((newWord: any) =>
+                            !prev.some((w) => (w.word || "").toLowerCase() === (newWord.word || "").toLowerCase())
+                        );
+                        if (newWords.length === 0) return prev;
+                        return [...prev, ...newWords];
+                    });
+                }
+            } catch (error) {
+                console.error("Background translation failed:", error);
+            }
+        })();
     };
 
     const chatPartners = [
