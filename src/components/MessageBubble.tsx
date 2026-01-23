@@ -108,7 +108,7 @@ const MessageBubble = memo(({
                 {/* Bubble */}
                 <div
                     className={cn(
-                        "p-3 lg:p-4 rounded-2xl transition-all relative group/msg cursor-pointer lg:cursor-default max-w-full overflow-hidden touch-manipulation",
+                        "p-3 lg:p-4 rounded-2xl transition-all relative group/msg cursor-pointer lg:cursor-default max-w-full touch-manipulation",
                         isMe
                             ? "bg-gradient-to-br from-primary/30 to-primary/10 rounded-tr-none border border-primary/20 shadow-[0_4px_20px_rgba(59,130,246,0.1)] hover:border-primary/40"
                             : "bg-gradient-to-br from-white/10 to-transparent backdrop-blur-md rounded-tl-none border border-white/5 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:border-white/20",
@@ -165,7 +165,7 @@ const MessageBubble = memo(({
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                                 className={cn(
-                                    "absolute bottom-full mb-3 flex flex-col gap-2 bg-card/95 backdrop-blur-xl p-2 rounded-2xl border border-white/20 shadow-2xl z-[100] min-w-[200px]",
+                                    "absolute bottom-full mb-3 flex flex-col gap-2 bg-card/95 backdrop-blur-2xl p-2 rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[110] min-w-[200px]",
                                     isMe ? "right-0" : "left-0"
                                 )}
                                 onClick={(e) => e.stopPropagation()}

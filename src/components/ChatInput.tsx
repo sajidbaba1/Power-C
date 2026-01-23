@@ -156,7 +156,7 @@ export default function ChatInput({
 
                 <div className="relative flex items-end gap-2 lg:gap-4 max-w-6xl mx-auto w-full">
                     {/* Action Buttons & Textarea wrapper */}
-                    <div className="flex-1 relative bg-white/5 border border-white/10 rounded-[2rem] flex items-end p-1.5 lg:p-2 transition-all focus-within:border-primary/50 focus-within:bg-white/10 shadow-inner group overflow-hidden">
+                    <div className="flex-1 relative bg-white/5 border border-white/10 rounded-[2rem] flex items-end p-1.5 lg:p-2 transition-all focus-within:border-primary/50 focus-within:bg-white/10 shadow-inner group">
 
                         <AnimatePresence initial={false}>
                             {(!text || window.innerWidth < 1024) && (
@@ -197,7 +197,7 @@ export default function ChatInput({
                                     initial={{ opacity: 0, scale: 0.9, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                    className="absolute bottom-[calc(100%+16px)] left-0 bg-zinc-900 border border-white/10 p-2 rounded-2xl shadow-2xl flex flex-col gap-1 z-50 min-w-[160px]"
+                                    className="absolute bottom-[calc(100%+16px)] left-0 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 p-2 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-1 z-[110] min-w-[200px]"
                                 >
                                     <button onClick={() => { onImageUpload(); setShowMoreActions(false); }} className="p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><ImageIcon className="w-5 h-5 text-emerald-400" /><span className="text-xs font-bold font-inter">Send Picture</span></button>
                                     <button onClick={() => { setShowStickers(true); setShowMoreActions(false); }} className="p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><Smile className="w-5 h-5 text-yellow-400" /><span className="text-xs font-bold font-inter">Stickers</span></button>
