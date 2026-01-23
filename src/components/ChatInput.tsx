@@ -51,7 +51,7 @@ export default function ChatInput({
     const [showGifs, setShowGifs] = useState(false);
     const [showStickers, setShowStickers] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const typingTimeoutRef = useRef<any>(null);
     const isTypingRef = useRef(false);
 
     useEffect(() => {
@@ -71,7 +71,7 @@ export default function ChatInput({
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-        typingTimeoutRef.current = setTimeout(() => {
+        typingTimeoutRef.current = window.setTimeout(() => {
             isTypingRef.current = false;
             onTyping(false);
         }, 2000);
@@ -276,7 +276,7 @@ export default function ChatInput({
                             onChange={(e) => handleTextChange(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder={replyingTo ? "Write a reply..." : `Message ${activeChat}...`}
-                            className="flex-1 bg-transparent border-none outline-none text-[15px] lg:text-base px-1 lg:px-4 min-w-0 resize-none overflow-y-auto leading-relaxed py-2 custom-scrollbar"
+                            className="flex-1 bg-transparent border-none outline-none text-[18px] lg:text-[20px] px-1 lg:px-4 min-w-0 resize-none overflow-y-auto leading-relaxed py-2 custom-scrollbar"
                             rows={1}
                             style={{ minHeight: '40px', maxHeight: '150px' }}
                         />

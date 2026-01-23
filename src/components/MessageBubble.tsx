@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { User, RotateCcw, MapPin, Lock, Check, CheckCheck } from "lucide-react";
+import { User, RotateCcw, MapPin, Lock, Check, CheckCheck, Pencil, Trash2, Copy, Trash } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, memo } from "react";
 
@@ -16,6 +16,9 @@ interface MessageBubbleProps {
     onReact: (msgId: string, emoji: string) => void;
     onPin: (msgId: string, isPinned: boolean) => void;
     onImageClick: (url: string) => void;
+    onDelete?: (msgId: string) => void;
+    onEdit?: (msgId: string, text: string) => void;
+    onDeleteForEveryone?: (msgId: string) => void;
 }
 
 const MessageBubble = memo(({
@@ -29,9 +32,12 @@ const MessageBubble = memo(({
     setReplyingTo,
     onReact,
     onPin,
-    onImageClick
+    onImageClick,
+    onDelete,
+    onEdit,
+    onDeleteForEveryone
 }: MessageBubbleProps) => {
-    const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+    const longPressTimer = useRef<any>(null);
 
     const isUnlocked = () => {
         if (msg.type !== "secret" || msg.sender === userRole) return true;
@@ -44,6 +50,12 @@ const MessageBubble = memo(({
     };
 
     const isMe = msg.sender === userRole;
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(msg.text);
+        setActiveMessageActions(null);
+        // Could add a toast here if available
+    };
 
     return (
         <motion.div
@@ -105,19 +117,19 @@ const MessageBubble = memo(({
                     )}
                     onTouchStart={() => {
                         if (longPressTimer.current) clearTimeout(longPressTimer.current);
-                        longPressTimer.current = setTimeout(() => {
+                        longPressTimer.current = window.setTimeout(() => {
                             setActiveMessageActions(msg.id);
                             if ('vibrate' in navigator) navigator.vibrate(50);
-                        }, 300);
+                        }, 500);
                     }}
                     onTouchEnd={() => {
                         if (longPressTimer.current) clearTimeout(longPressTimer.current);
                     }}
                     onMouseDown={() => {
                         if (longPressTimer.current) clearTimeout(longPressTimer.current);
-                        longPressTimer.current = setTimeout(() => {
+                        longPressTimer.current = window.setTimeout(() => {
                             setActiveMessageActions(msg.id);
-                        }, 300);
+                        }, 500);
                     }}
                     onMouseUp={() => {
                         if (longPressTimer.current) clearTimeout(longPressTimer.current);
@@ -146,49 +158,104 @@ const MessageBubble = memo(({
                     )}
 
                     {/* Action Menu */}
-                    <div className={cn(
-                        "absolute bottom-full mb-3 flex gap-1 bg-card/95 backdrop-blur-xl p-2 rounded-2xl border border-white/20 shadow-2xl transition-all z-[100]",
-                        isActive
-                            ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                            : "opacity-0 scale-90 translate-y-2 pointer-events-none lg:group-hover/msg:opacity-100 lg:group-hover/msg:scale-100 lg:group-hover/msg:translate-y-0 lg:group-hover/msg:pointer-events-auto",
-                        isMe ? "right-0" : "left-0"
-                    )}>
-                        {["❤️", "😂", "😮", "🔥", "😢"].map(emoji => (
-                            <button
-                                key={emoji}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onReact(msg.id, emoji);
-                                }}
-                                className="hover:scale-150 active:scale-110 transition-transform px-1.5 text-lg lg:text-base outline-none w-8 h-8 flex items-center justify-center"
+                    <AnimatePresence>
+                        {isActive && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                className={cn(
+                                    "absolute bottom-full mb-3 flex flex-col gap-2 bg-card/95 backdrop-blur-xl p-2 rounded-2xl border border-white/20 shadow-2xl z-[100] min-w-[200px]",
+                                    isMe ? "right-0" : "left-0"
+                                )}
+                                onClick={(e) => e.stopPropagation()}
                             >
-                                {emoji}
-                            </button>
-                        ))}
-                        <div className="w-[1px] bg-white/10 mx-2" />
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMessageActions(null);
-                                setReplyingTo(msg);
-                            }}
-                            className="p-2 hover:text-primary hover:bg-white/5 rounded-lg active:scale-95 transition-all text-muted-foreground"
-                        >
-                            <RotateCcw className="w-4 h-4 lg:w-4 lg:h-4" />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onPin(msg.id, !msg.isPinned);
-                            }}
-                            className={cn("p-2 rounded-lg transition-all active:scale-95", msg.isPinned ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:text-amber-400 hover:bg-white/5")}
-                        >
-                            <MapPin className="w-4 h-4 lg:w-4 lg:h-4" />
-                        </button>
-                    </div>
+                                {/* Reaction Row */}
+                                <div className="flex gap-1 justify-between px-1 pb-1 border-b border-white/10">
+                                    {["❤️", "😂", "😮", "🔥", "😢", "💯"].map(emoji => (
+                                        <button
+                                            key={emoji}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onReact(msg.id, emoji);
+                                                setActiveMessageActions(null);
+                                            }}
+                                            className="hover:scale-150 active:scale-110 transition-transform p-1 text-xl outline-none"
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Action List */}
+                                <div className="grid grid-cols-2 gap-1 p-1">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveMessageActions(null);
+                                            setReplyingTo(msg);
+                                        }}
+                                        className="flex items-center gap-2 p-2 hover:bg-white/10 rounded-xl transition-all text-xs font-bold"
+                                    >
+                                        <RotateCcw className="w-4 h-4" /> Reply
+                                    </button>
+                                    <button
+                                        onClick={handleCopy}
+                                        className="flex items-center gap-2 p-2 hover:bg-white/10 rounded-xl transition-all text-xs font-bold"
+                                    >
+                                        <Copy className="w-4 h-4" /> Copy
+                                    </button>
+                                    {isMe && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onEdit?.(msg.id, msg.text);
+                                                setActiveMessageActions(null);
+                                            }}
+                                            className="flex items-center gap-2 p-2 hover:bg-white/10 rounded-xl transition-all text-xs font-bold"
+                                        >
+                                            <Pencil className="w-4 h-4" /> Edit
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onPin(msg.id, !msg.isPinned);
+                                            setActiveMessageActions(null);
+                                        }}
+                                        className={cn("flex items-center gap-2 p-2 hover:bg-white/10 rounded-xl transition-all text-xs font-bold", msg.isPinned && "text-amber-400")}
+                                    >
+                                        <MapPin className="w-4 h-4" /> {msg.isPinned ? 'Unpin' : 'Pin'}
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete?.(msg.id);
+                                            setActiveMessageActions(null);
+                                        }}
+                                        className="flex items-center gap-2 p-2 hover:bg-red-500/20 text-red-500 rounded-xl transition-all text-xs font-bold"
+                                    >
+                                        <Trash2 className="w-4 h-4" /> Delete For Me
+                                    </button>
+                                    {isMe && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDeleteForEveryone?.(msg.id);
+                                                setActiveMessageActions(null);
+                                            }}
+                                            className="flex items-center gap-2 p-2 hover:bg-red-500/20 text-red-500 rounded-xl transition-all text-xs font-bold"
+                                        >
+                                            <Trash className="w-4 h-4" /> Delete For Everyone
+                                        </button>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* Content */}
-                    <div className="text-sm lg:text-[15px] break-words leading-relaxed font-medium">
+                    <div className="text-lg lg:text-[22px] break-words leading-relaxed font-semibold">
                         {msg.imageUrl ? (
                             <div className="relative w-full aspect-square max-w-[300px] mb-2">
                                 <Image
@@ -214,7 +281,7 @@ const MessageBubble = memo(({
                             <>
                                 {msg.text}
                                 {msg.translation && msg.translation.toLowerCase() !== msg.text.toLowerCase() && (
-                                    <div className="mt-2 text-[12px] text-white/60 font-medium">
+                                    <div className="mt-2 text-[14px] text-white/60 font-medium">
                                         {msg.translation}
                                     </div>
                                 )}

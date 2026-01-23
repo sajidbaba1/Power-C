@@ -52,12 +52,12 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+    const longPressTimer = useRef<any>(null);
     const [showMoreActions, setShowMoreActions] = useState(false);
     const [fireworkText, setFireworkText] = useState<string | null>(null);
     const lastFireworkId = useRef<string | null>(null);
     const [isOtherTyping, setIsOtherTyping] = useState(false);
-    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const typingTimeoutRef = useRef<any>(null);
     const isTypingRef = useRef(false);
     const [showRocket, setShowRocket] = useState(false);
     const [chatWallpaper, setChatWallpaper] = useState<string | null>(null);
@@ -88,6 +88,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [isScrolledUp, setIsScrolledUp] = useState(false);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+    const [editingMessage, setEditingMessage] = useState<any>(null);
 
     const handleReact = useCallback(async (msgId: string, emoji: string) => {
         setActiveMessageActions(null);
@@ -106,6 +107,38 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             body: JSON.stringify({ messageId: msgId, isPinned, chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}` })
         });
     }, [activeChat]);
+
+    const handleDelete = useCallback(async (msgId: string) => {
+        setMessages(prev => ({
+            ...prev,
+            [activeChat]: prev[activeChat].filter(m => m.id !== msgId)
+        }));
+        await fetch("/api/messages", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messageId: msgId, forEveryone: false, chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}` })
+        });
+    }, [activeChat]);
+
+    const handleDeleteForEveryone = useCallback(async (msgId: string) => {
+        setMessages(prev => ({
+            ...prev,
+            [activeChat]: prev[activeChat].filter(m => m.id !== msgId)
+        }));
+        await fetch("/api/messages", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messageId: msgId, forEveryone: true, chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}` })
+        });
+    }, [activeChat]);
+
+    const handleEdit = useCallback((msgId: string, text: string) => {
+        const msg = messages[activeChat].find(m => m.id === msgId);
+        if (msg) {
+            setEditingMessage(msg);
+            setInputValue(text);
+        }
+    }, [activeChat, messages]);
 
     useEffect(() => {
         const container = messagesContainerRef.current;
@@ -447,6 +480,20 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                     [activeChat]: [...chatMessages, newMessage]
                 };
             });
+        });
+
+        channel.bind("message-deleted", ({ messageId }: { messageId: string }) => {
+            setMessages((prev) => ({
+                ...prev,
+                [activeChat]: prev[activeChat].filter(m => m.id !== messageId)
+            }));
+        });
+
+        channel.bind("message-edited", ({ messageId, text }: { messageId: string, text: string }) => {
+            setMessages((prev) => ({
+                ...prev,
+                [activeChat]: prev[activeChat].map(m => m.id === messageId ? { ...m, text, status: "edited" } : m)
+            }));
         });
 
         channel.bind("clear-chat", () => {
@@ -887,6 +934,24 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         }).catch(err => console.error("Failed to record streak:", err));
 
         // 3. Request translation in background (Non-blocking)
+        if (editingMessage) {
+            await fetch("/api/messages", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messageId: editingMessage.id,
+                    text: text,
+                    chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}`
+                })
+            });
+            setMessages(prev => ({
+                ...prev,
+                [activeChat]: prev[activeChat].map(m => m.id === editingMessage.id ? { ...m, text, status: "edited" } : m)
+            }));
+            setEditingMessage(null);
+            return;
+        }
+
         (async () => {
             try {
                 const response = await fetch("/api/chat", {
@@ -1276,237 +1341,29 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                         onReact={handleReact}
                                         onPin={handlePin}
                                         onImageClick={setLightboxImage}
+                                        onDelete={handleDelete}
+                                        onEdit={handleEdit}
+                                        onDeleteForEveryone={handleDeleteForEveryone}
                                     />
                                 ))}
                             </AnimatePresence>
                         );
-                        /*
-                            <motion.div
-                                key={msg.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                drag="x"
-                                dragConstraints={{ left: 0, right: 100 }}
-                                dragElastic={0.4}
-                                onDragEnd={(_, info) => {
-                                    if (info.offset.x > 50) {
-                                        setReplyingTo(msg);
-                                        if ('vibrate' in navigator) navigator.vibrate(20);
-                                    }
-                                }}
-                                className={cn(
-                                    "flex gap-3 max-w-[85%] lg:max-w-[75%]",
-                                    msg.sender === "nasywa" ? "ml-auto flex-row-reverse" : "mr-auto flex-row"
-                                )}
-                            >
-                                <div className={cn(
-                                    "w-8 h-8 rounded-xl shrink-0 flex items-center justify-center overflow-hidden border border-white/10 shadow-lg",
-                                    msg.sender === "nasywa" ? "bg-gradient-to-br from-pink-500 to-rose-600" : "bg-gradient-to-br from-blue-500 to-indigo-600"
-                                )}>
-                                    {profiles[msg.sender]?.avatarUrl ? (
-                                        <img src={profiles[msg.sender].avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User className="w-4 h-4 text-white" />
-                                    )}
-                                </div>
-                                <div className={cn("flex flex-col gap-1 relative", msg.sender === "nasywa" ? "items-end" : "items-start")}>
-                                    {msg.parentId && (
-                                        <div className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1 px-2">
-                                            <RotateCcw className="w-2.5 h-2.5" />
-                                            Replied to: {messageMap.get(msg.parentId)?.text?.substring(0, 20)}...
-                                        </div>
-                                    )}
-                                    <div
-                                        className={cn(
-                                            "p-3 lg:p-4 rounded-2xl transition-all relative group/msg cursor-pointer lg:cursor-default",
-                                            msg.sender === "nasywa"
-                                                ? "bg-gradient-to-br from-primary/30 to-primary/10 rounded-tr-none border border-primary/20 shadow-[0_4px_20px_rgba(236,72,153,0.1)] hover:border-primary/40"
-                                                : "bg-gradient-to-br from-white/10 to-transparent backdrop-blur-md rounded-tl-none border border-white/5 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:border-white/20",
-                                            msg.isPinned && "border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)]",
-                                            activeMessageActions === msg.id && "ring-2 ring-primary/50"
-                                        )}
-                                        onTouchStart={() => {
-                                            if (longPressTimer.current) clearTimeout(longPressTimer.current);
-                                            longPressTimer.current = setTimeout(() => {
-                                                setActiveMessageActions(msg.id);
-                                                if ('vibrate' in navigator) navigator.vibrate(50);
-                                            }, 500);
-                                        }}
-                                        onTouchEnd={() => {
-                                            if (longPressTimer.current) clearTimeout(longPressTimer.current);
-                                        }}
-                                        onContextMenu={(e) => {
-                                            if (window.innerWidth < 1024) e.preventDefault();
-                                        }}
-                                    >
-                                        <motion.div
-                                            className="absolute -left-10 top-1/2 -translate-y-1/2 opacity-0 group-drag:opacity-100"
-                                            style={{ x: -20 }}
-                                        >
-                                            <RotateCcw className="w-5 h-5 text-primary" />
-                                        </motion.div>
-
-                                        {msg.isPinned && (
-                                            <div className="absolute -top-2 -left-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center shadow-lg border-2 border-background">
-                                                <MapPin className="w-3 h-3 text-white" />
-                                            </div>
-                                        )}
-
-                                        <div className={cn(
-                                            "absolute bottom-full mb-3 flex gap-1 bg-card/95 backdrop-blur-xl p-2 rounded-2xl border border-white/20 shadow-2xl transition-all z-[100]",
-                                            activeMessageActions === msg.id
-                                                ? "opacity-100 scale-100 translate-y-0"
-                                                : "opacity-0 scale-90 translate-y-2 pointer-events-none lg:pointer-events-auto lg:group-hover/msg:opacity-100 lg:group-hover/msg:scale-100 lg:group-hover/msg:translate-y-0",
-                                            msg.sender === "nasywa" ? "right-0" : "left-0"
-                                        )}>
-                                            {["❤️", "😂", "😮", "🔥", "😢"].map(emoji => (
-                                                <button
-                                                    key={emoji}
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        setActiveMessageActions(null);
-                                                        await fetch("/api/messages/react", {
-                                                            method: "POST",
-                                                            headers: { "Content-Type": "application/json" },
-                                                            body: JSON.stringify({ messageId: msg.id, emoji, user: "nasywa", chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}` })
-                                                        });
-                                                    }}
-                                                    className="hover:scale-150 active:scale-110 transition-transform px-1.5 text-lg lg:text-base outline-none"
-                                                >
-                                                    {emoji}
-                                                </button>
-                                            ))}
-                                            <div className="w-[1px] bg-white/10 mx-2" />
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setActiveMessageActions(null);
-                                                    setReplyingTo(msg);
-                                                }}
-                                                className="p-2 hover:text-primary hover:bg-white/5 rounded-lg active:scale-95 transition-all text-muted-foreground"
-                                            >
-                                                <RotateCcw className="w-4 h-4 lg:w-4 lg:h-4" />
-                                            </button>
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    setActiveMessageActions(null);
-                                                    await fetch("/api/messages/pin", {
-                                                        method: "POST",
-                                                        headers: { "Content-Type": "application/json" },
-                                                        body: JSON.stringify({ messageId: msg.id, isPinned: !msg.isPinned, chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}` })
-                                                    });
-                                                }}
-                                                className={cn("p-2 rounded-lg transition-all active:scale-95", msg.isPinned ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:text-amber-400 hover:bg-white/5")}
-                                            >
-                                                <MapPin className="w-4 h-4 lg:w-4 lg:h-4" />
-                                            </button>
-                                        </div>
-
-                                        <div className="text-sm lg:text-[15px] break-words leading-relaxed font-medium">
-                                            {msg.imageUrl ? (
-                                                <img src={msg.imageUrl} alt="Sent" className="max-w-full rounded-xl mb-2 shadow-2xl border border-white/10 cursor-pointer transition-transform hover:scale-[1.02]" onClick={() => window.open(msg.imageUrl, '_blank')} />
-                                            ) : msg.type === "sticker" ? (
-                                                <div className="text-6xl my-2 drop-shadow-xl">{msg.text}</div>
-                                            ) : msg.type === "secret" && !isUnlocked(msg) ? (
-                                                <div className="flex flex-col items-center gap-2 py-6 px-10 opacity-70 select-none bg-black/20 rounded-xl border border-white/5 shadow-inner">
-                                                    <Lock className="w-10 h-10 animate-pulse text-amber-500" />
-                                                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-center">
-                                                        Encrypted<br />
-                                                        <span className="text-amber-500 font-display">T-{msg.unlockAt}</span>
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                msg.text
-                                            )}
-                                        </div>
-
-                                        {msg.reactions && (msg.reactions as any[]).length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-3">
-                                                {(msg.reactions as any[]).map((r, i) => (
-                                                    <motion.span
-                                                        initial={{ scale: 0 }}
-                                                        animate={{ scale: 1 }}
-                                                        key={i}
-                                                        className="text-[11px] bg-white/10 backdrop-blur-md border border-white/10 px-2 py-1 rounded-full flex items-center gap-1 shadow-lg"
-                                                    >
-                                                        {r.emoji}
-                                                    </motion.span>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {msg.status === "sending" && (
-                                            <div className="mt-2 flex items-center gap-1.5 px-1">
-                                                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" />
-                                                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
-                                                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
-                                                <span className="text-[10px] text-muted-foreground ml-1 font-bold">TRANSLATING...</span>
-                                            </div>
-                                        )}
-
-                                        {msg.sender === "nasywa" && (
-                                            <div className="flex justify-end mt-1.5 opacity-50 group-hover/msg:opacity-100 transition-opacity">
-                                                {msg.status === "seen" ? (
-                                                    <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
-                                                ) : msg.status === "sent" ? (
-                                                    <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/50" />
-                                                ) : (
-                                                    <Check className="w-3.5 h-3.5 text-muted-foreground/50" />
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {msg.translation && (
-                                            <div className="mt-3 pt-3 border-t border-white/5 group-hover/msg:border-white/10 transition-colors">
-                                                <div className="flex items-center gap-1.5 mb-1.5">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
-                                                    <span className="text-[10px] uppercase font-black tracking-widest text-orange-400">Hindi</span>
-                                                </div>
-                                                <p className="text-[13px] text-orange-300/90 font-medium leading-relaxed italic">{msg.translation}</p>
-                                                {msg.wordBreakdown && (msg.wordBreakdown as any[]).length > 0 && (
-                                                    <details className="mt-2 group/details">
-                                                        <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-white transition-all list-none flex items-center gap-1 font-bold uppercase tracking-tighter">
-                                                            <ChevronRight className="w-3 h-3 group-open/details:rotate-90 transition-transform" />
-                                                            Word breakdown
-                                                        </summary>
-                                                        <div className="mt-2 grid grid-cols-1 gap-1.5">
-                                                            {(msg.wordBreakdown as any[]).slice(0, 5).map((w, i) => (
-                                                                <div key={i} className="text-[10px] bg-orange-500/5 border border-orange-500/10 p-2 rounded-xl flex items-center justify-between group-hover/msg:border-orange-500/20 transition-all">
-                                                                    <span className="font-black text-orange-400">{w.word}</span>
-                                                                    <span className="text-orange-300/70">{w.hindi || w.translation}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </details>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2 px-2 mt-0.5 opacity-60">
-                                        <span className="text-[10px] font-medium tracking-tight text-muted-foreground">{msg.timestamp}</span>
-                                    </div>
-                                </div >
-                            </motion.div >
-                        ))
-                        */
                     })()}
-                    {
-                        isOtherTyping && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex items-center gap-2 px-4 py-2"
-                            >
-                                <div className="flex gap-1">
-                                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
-                                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
-                                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
-                                </div>
-                                <span className="text-xs text-muted-foreground italic">Sajid is typing...</span>
-                            </motion.div>
-                        )
-                    }
+
+                    {isOtherTyping && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center gap-2 px-4 py-2"
+                        >
+                            <div className="flex gap-1">
+                                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
+                                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
+                                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
+                            </div>
+                            <span className="text-xs text-muted-foreground italic">Sajid is typing...</span>
+                        </motion.div>
+                    )}
                     <div ref={messagesEndRef} />
 
                     {/* Scroll to Bottom Button */}
@@ -1523,13 +1380,15 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                             </motion.button>
                         )}
                     </AnimatePresence>
-                </div >
+                </div>
 
                 {/* Input Area - Optimized for Mobile safe areas and alignment */}
-                <div className={cn(
-                    "fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto shrink-0 z-40 transition-all duration-300",
-                    isScrolledUp ? "bg-zinc-950/90 backdrop-blur-xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/5" : "bg-background/40 backdrop-blur-md"
-                )}>
+                < div className={
+                    cn(
+                        "fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto shrink-0 z-40 transition-all duration-300",
+                        isScrolledUp ? "bg-zinc-950/90 backdrop-blur-xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/5" : "bg-background/40 backdrop-blur-md"
+                    )
+                } >
                     <div className="flex flex-col w-full">
                         {/* Chat Input Section */}
                         <ChatInput

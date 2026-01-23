@@ -90,6 +90,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     const [showReactionsFor, setShowReactionsFor] = useState<string | null>(null);
     const [activeThreads, setActiveThreads] = useState<Record<string, any[]>>({});
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+    const [editingMessage, setEditingMessage] = useState<any>(null);
 
     const handleReact = useCallback(async (msgId: string, emoji: string) => {
         setActiveMessageActions(null);
@@ -108,6 +109,38 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
             body: JSON.stringify({ messageId: msgId, isPinned, chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}` })
         });
     }, [activeChat]);
+
+    const handleDelete = useCallback(async (msgId: string) => {
+        setMessages(prev => ({
+            ...prev,
+            [activeChat]: prev[activeChat].filter(m => m.id !== msgId)
+        }));
+        await fetch("/api/messages", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messageId: msgId, forEveryone: false, chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}` })
+        });
+    }, [activeChat]);
+
+    const handleDeleteForEveryone = useCallback(async (msgId: string) => {
+        setMessages(prev => ({
+            ...prev,
+            [activeChat]: prev[activeChat].filter(m => m.id !== msgId)
+        }));
+        await fetch("/api/messages", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messageId: msgId, forEveryone: true, chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}` })
+        });
+    }, [activeChat]);
+
+    const handleEdit = useCallback((msgId: string, text: string) => {
+        const msg = messages[activeChat].find(m => m.id === msgId);
+        if (msg) {
+            setEditingMessage(msg);
+            setInputValue(text);
+        }
+    }, [activeChat, messages]);
 
     const isUnlocked = (msg: any) => {
         if (msg.type !== "secret" || msg.sender === "sajid") return true;
@@ -494,6 +527,20 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
             });
         });
 
+        channel.bind("message-deleted", ({ messageId }: { messageId: string }) => {
+            setMessages((prev) => ({
+                ...prev,
+                [activeChat]: prev[activeChat].filter(m => m.id !== messageId)
+            }));
+        });
+
+        channel.bind("message-edited", ({ messageId, text }: { messageId: string, text: string }) => {
+            setMessages((prev) => ({
+                ...prev,
+                [activeChat]: prev[activeChat].map(m => m.id === messageId ? { ...m, text, status: "edited" } : m)
+            }));
+        });
+
         channel.bind("clear-chat", () => {
             setMessages(prev => ({ ...prev, [activeChat]: [] }));
         });
@@ -673,7 +720,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-        typingTimeoutRef.current = setTimeout(() => {
+        typingTimeoutRef.current = window.setTimeout(() => {
             isTypingRef.current = false;
             fetch("/api/chat/typing", {
                 method: "POST",
@@ -1019,6 +1066,24 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
         }).catch(err => console.error("Failed to record streak:", err));
 
         // 3. Request translation in background (Non-blocking)
+        if (editingMessage) {
+            await fetch("/api/messages", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messageId: editingMessage.id,
+                    text: text,
+                    chatKey: `${["sajid", activeChat].sort()[0]}-${["sajid", activeChat].sort()[1]}`
+                })
+            });
+            setMessages(prev => ({
+                ...prev,
+                [activeChat]: prev[activeChat].map(m => m.id === editingMessage.id ? { ...m, text, status: "edited" } : m)
+            }));
+            setEditingMessage(null);
+            return;
+        }
+
         (async () => {
             try {
                 const response = await fetch("/api/chat", {
@@ -1392,6 +1457,9 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                                                 onReact={handleReact}
                                                 onPin={handlePin}
                                                 onImageClick={setLightboxImage}
+                                                onDelete={handleDelete}
+                                                onEdit={handleEdit}
+                                                onDeleteForEveryone={handleDeleteForEveryone}
                                             />
                                         ))}
                                     </AnimatePresence>
