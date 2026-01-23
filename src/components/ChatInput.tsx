@@ -130,7 +130,7 @@ export default function ChatInput({
             </AnimatePresence>
 
             {/* Main Input Container - Better safe area and padding */}
-            <div className="px-2 pb-safe pt-2 lg:p-6 bg-card/50 backdrop-blur-xl border-t border-white/5 relative z-20">
+            <div className="px-2 pb-safe pt-2 lg:p-6 bg-card/50 backdrop-blur-xl border-t border-white/5 relative z-20 w-full max-w-[100vw] overflow-hidden">
                 {/* Replying To Preview - Integrated better */}
                 <AnimatePresence>
                     {replyingTo && (
@@ -156,7 +156,7 @@ export default function ChatInput({
 
                 <div className="relative flex items-end gap-2 lg:gap-4 max-w-6xl mx-auto w-full">
                     {/* Action Buttons & Textarea wrapper */}
-                    <div className="flex-1 relative bg-white/5 border border-white/10 rounded-[2rem] flex items-end p-1.5 lg:p-2 transition-all focus-within:border-primary/50 focus-within:bg-white/10 shadow-inner group">
+                    <div className="flex-1 relative bg-white/5 border border-white/10 rounded-[2rem] flex items-end p-1 lg:p-2 transition-all focus-within:border-primary/50 focus-within:bg-white/10 shadow-inner group min-w-0">
 
                         <AnimatePresence initial={false}>
                             {!text && (
