@@ -159,7 +159,7 @@ export default function ChatInput({
                     <div className="flex-1 relative bg-white/5 border border-white/10 rounded-[2rem] flex items-end p-1.5 lg:p-2 transition-all focus-within:border-primary/50 focus-within:bg-white/10 shadow-inner group">
 
                         <AnimatePresence initial={false}>
-                            {(!text || window.innerWidth < 1024) && (
+                            {!text && (
                                 <motion.div
                                     initial={{ width: 0, opacity: 0 }}
                                     animate={{ width: "auto", opacity: 1 }}
