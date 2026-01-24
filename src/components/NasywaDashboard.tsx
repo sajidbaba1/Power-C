@@ -29,6 +29,7 @@ import { generateWordsPDF } from "@/lib/pdfGenerator";
 import NotificationManager from './NotificationManager';
 import { Download } from "lucide-react";
 import { useWebRTC } from "@/hooks/useWebRTC";
+import { useChat } from "@/hooks/useChat";
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -45,10 +46,6 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [backgroundEffect, setBackgroundEffect] = useState<EffectType>("none");
     const [isStopEffectsEnabled, setIsStopEffectsEnabled] = useState(false);
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-    const [messages, setMessages] = useState<Record<string, any[]>>({
-        sajid: [],
-        admin: []
-    });
     const [inputValue, setInputValue] = useState("");
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [learnedWords, setLearnedWords] = useState<any[]>([]);
@@ -69,7 +66,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [showMoreActions, setShowMoreActions] = useState(false);
     const [fireworkText, setFireworkText] = useState<string | null>(null);
     const lastFireworkId = useRef<string | null>(null);
-    const [isOtherTyping, setIsOtherTyping] = useState(false);
+    // Removed isOtherTyping: handled by hook
     const typingTimeoutRef = useRef<any>(null);
     const isTypingRef = useRef(false);
     const [showRocket, setShowRocket] = useState(false);
@@ -105,6 +102,20 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const [editingMessage, setEditingMessage] = useState<any>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+
+    const { messages, setMessages, isOtherTyping, sendMessage } = useChat(activeChat, "nasywa");
+
+    // Simplified handleSend using hook
+    const handleSend = async (text: string, isSticker: boolean = false, isSecret: boolean = false) => {
+        if (!text.trim() && !isSticker) return;
+        const type = isSticker ? "sticker" : "text";
+        await sendMessage(text, isSecret, isSecretMode ? secretUnlockTime : undefined, type);
+    };
+
+    // Simplified handleGifSend
+    const handleGifSend = async (url: string) => {
+        await sendMessage("", false, undefined, "image", url);
+    };
 
     const {
         callConfig,
@@ -516,21 +527,8 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         scrollToBottom();
     }, [messages, activeChat]);
 
-    // Real-time synchronization with Pusher
+    // Real-time synchronization with Pusher (Non-chat events)
     useEffect(() => {
-        const fetchInitialMessages = async () => {
-            try {
-                const res = await fetch(`/api/messages?user1=nasywa&user2=${activeChat}`);
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    setMessages((prev) => ({ ...prev, [activeChat]: data }));
-                }
-            } catch (e) {
-                console.error("Initial fetch failed", e);
-            }
-        };
-        fetchInitialMessages();
-
         const pusher = getPusherClient();
         if (!pusher || !process.env.NEXT_PUBLIC_PUSHER_KEY) return;
 
@@ -538,89 +536,9 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         const chatKey = `${sorted[0]}-${sorted[1]}`;
         const channel = pusher.subscribe(chatKey);
 
-        channel.bind("new-message", (newMessage: any) => {
-            // Check for fireworks in new messages
-            if (newMessage.type === "heart_firework" && newMessage.id !== lastFireworkId.current) {
-                lastFireworkId.current = newMessage.id;
-                triggerFirework(newMessage.text);
-            }
-
-            setMessages((prev) => {
-                const chatMessages = prev[activeChat] || [];
-                const existingIndex = chatMessages.findIndex(m => m.id === newMessage.id);
-
-                if (existingIndex !== -1) {
-                    // Update existing message
-                    const existing = chatMessages[existingIndex];
-
-                    // CRITICAL: If we are the sender, don't let a stale server update (without translation) 
-                    // overwrite our local state which might already have the translation.
-                    if (newMessage.sender === "nasywa") {
-                        // Only update if the new message has translation and ours doesn't,
-                        // or if the status changed.
-                        const shouldUpdate =
-                            (!existing.translation && newMessage.translation) ||
-                            (existing.status !== newMessage.status) ||
-                            (JSON.stringify(existing.reactions) !== JSON.stringify(newMessage.reactions));
-
-                        if (!shouldUpdate) return prev;
-
-                        // Merge instead of replace to keep local translation if server one is missing
-                        const merged = {
-                            ...existing,
-                            ...newMessage,
-                            translation: newMessage.translation || existing.translation,
-                            wordBreakdown: newMessage.wordBreakdown || existing.wordBreakdown
-                        };
-
-                        const newChatMessages = [...chatMessages];
-                        newChatMessages[existingIndex] = merged;
-                        return { ...prev, [activeChat]: newChatMessages };
-                    }
-
-                    // For foreign messages, replace is fine
-                    const newChatMessages = [...chatMessages];
-                    newChatMessages[existingIndex] = newMessage;
-                    return { ...prev, [activeChat]: newChatMessages };
-                }
-
-                // New message: Append
-                return {
-                    ...prev,
-                    [activeChat]: [...chatMessages, newMessage]
-                };
-            });
-        });
-
-        channel.bind("message-deleted", ({ messageId }: { messageId: string }) => {
-            setMessages((prev) => ({
-                ...prev,
-                [activeChat]: prev[activeChat].filter(m => m.id !== messageId)
-            }));
-        });
-
-        channel.bind("message-edited", ({ messageId, text }: { messageId: string, text: string }) => {
-            setMessages((prev) => ({
-                ...prev,
-                [activeChat]: prev[activeChat].map(m => m.id === messageId ? { ...m, text, status: "edited" } : m)
-            }));
-        });
-
-        channel.bind("clear-chat", () => {
-            setMessages(prev => ({ ...prev, [activeChat]: [] }));
-        });
-
-        channel.bind("typing", (data: { user: string, isTyping: boolean }) => {
-            if (data.user !== "nasywa") {
-                setIsOtherTyping(data.isTyping);
-            }
-        });
-
         channel.bind("profile-update", (data: { role: string, profile: any }) => {
             setProfiles(prev => ({ ...prev, [data.role]: data.profile }));
         });
-
-
 
         channel.bind("hug", () => {
             setCurrentHug(true);
@@ -683,48 +601,6 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
             if (data && typeof data.stopEffects === "boolean") {
                 setIsStopEffectsEnabled(data.stopEffects);
             }
-        });
-
-        channel.bind("global-settings-update", (data: any) => {
-            if (data && typeof data.stopEffects === "boolean") {
-                setIsStopEffectsEnabled(data.stopEffects);
-            }
-        });
-
-        channel.bind("message-reaction", (data: { messageId: string, reactions: any[] }) => {
-            setMessages(prev => {
-                const chatMessages = prev[activeChat] || [];
-                return {
-                    ...prev,
-                    [activeChat]: chatMessages.map(m =>
-                        m.id === data.messageId ? { ...m, reactions: data.reactions } : m
-                    )
-                };
-            });
-        });
-
-        channel.bind("message-pin", (data: { messageId: string, isPinned: boolean }) => {
-            setMessages(prev => {
-                const chatMessages = prev[activeChat] || [];
-                return {
-                    ...prev,
-                    [activeChat]: chatMessages.map(m =>
-                        m.id === data.messageId ? { ...m, isPinned: data.isPinned } : m
-                    )
-                };
-            });
-        });
-
-        channel.bind("messages-seen", (data: { messageIds: string[] }) => {
-            setMessages((prev) => {
-                const chatMessages = prev[activeChat] || [];
-                return {
-                    ...prev,
-                    [activeChat]: chatMessages.map(m =>
-                        data.messageIds.includes(m.id) ? { ...m, status: "seen" } : m
-                    )
-                };
-            });
         });
 
         return () => {
@@ -968,40 +844,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         });
     };
 
-    const handleGifSend = async (url: string) => {
-        const sorted = ["nasywa", activeChat].sort();
-        const chatKey = `${sorted[0]}-${sorted[1]}`;
-        const msgId = `msg-${Date.now()}`;
 
-        const newMessage = {
-            id: msgId,
-            text: "Sent a GIF",
-            imageUrl: url,
-            sender: "nasywa",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            status: "sending" as const,
-            type: "image",
-            isPinned: false
-        };
-
-        setMessages((prev: any) => ({
-            ...prev,
-            [activeChat]: [...(prev[activeChat] || []), newMessage]
-        }));
-
-        await fetch("/api/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user1: "nasywa",
-                user2: activeChat,
-                message: {
-                    ...newMessage,
-                    text: "Sent a GIF"
-                }
-            })
-        });
-    };
 
     const handleAddJarNote = async (content: string) => {
         const res = await fetch("/api/jar", {
@@ -1016,154 +859,10 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         });
     };
 
-    const handleSend = async (textOverride?: string, isSticker = false, isSecret = false) => {
-        const text = textOverride || inputValue;
-        if (!text.trim()) return;
 
-        const useSecret = isSecret || isSecretMode;
 
-        const userMessage: any = {
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            text: text,
-            sender: "nasywa",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            status: "sending",
-            isSticker: isSticker,
-            isHeart: text === "❤️" || text === "💖",
-            type: useSecret ? "secret" : (isSticker ? "sticker" : "normal"),
-            unlockAt: useSecret ? secretUnlockTime : null,
-            parentId: replyingTo?.id || null
-        };
 
-        setMessages((prev) => ({
-            ...prev,
-            [activeChat]: [...prev[activeChat], userMessage]
-        }));
-        setInputValue("");
-        setReplyingTo(null);
-        if (textareaRef.current) {
-            textareaRef.current.style.height = '40px';
-        }
 
-        // Reset secret mode after sending
-        if (isSecretMode) {
-            setIsSecretMode(false);
-        }
-
-        // Trigger Baby Boy animation if keyword detected
-        if (text.toLowerCase().includes("baby boy") || text.toLowerCase().includes("babyboy")) {
-            sendBabyBoy();
-        }
-
-        // Trigger Greetings
-        const lowerText = text.toLowerCase();
-        if (lowerText.includes("good morning")) sendGreeting("goodmorning");
-        else if (lowerText.includes("good afternoon")) sendGreeting("goodafternoon");
-        else if (lowerText.includes("good evening")) sendGreeting("goodevening");
-        else if (lowerText.includes("good night")) sendGreeting("goodnight");
-
-        // 2. Persist to message store INSTANTLY (without translation)
-        fetch("/api/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user1: "nasywa",
-                user2: activeChat,
-                message: { ...userMessage, status: "sent" } // Set as sent immediately in store
-            })
-        }).catch(err => console.error("Initial sync failed:", err));
-
-        // Record streak activity
-        fetch("/api/streak", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ role: "nasywa" })
-        }).catch(err => console.error("Failed to record streak:", err));
-
-        // 3. Request translation in background (Non-blocking)
-        if (editingMessage) {
-            await fetch("/api/messages", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    messageId: editingMessage.id,
-                    text: text,
-                    chatKey: `${["nasywa", activeChat].sort()[0]}-${["nasywa", activeChat].sort()[1]}`
-                })
-            });
-            setMessages(prev => ({
-                ...prev,
-                [activeChat]: prev[activeChat].map(m => m.id === editingMessage.id ? { ...m, text, status: "edited" } : m)
-            }));
-            setEditingMessage(null);
-            return;
-        }
-
-        (async () => {
-            try {
-                const response = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        text: text,
-                        sourceLang: "English",
-                        targetLang: "Hindi"
-                    }),
-                });
-
-                if (!response.ok) return;
-
-                const data = await response.json();
-
-                const updatedMessage = {
-                    ...userMessage,
-                    translation: data.translation || data.hindiTranslation || "No translation",
-                    wordBreakdown: data.wordBreakdown || [],
-                    status: "sent"
-                };
-
-                // Update local state with translation
-                setMessages((prev) => {
-                    const currentChat = prev[activeChat] || [];
-                    const index = currentChat.findIndex(m => m.id === userMessage.id);
-                    if (index === -1) return prev;
-
-                    const newChat = [...currentChat];
-                    newChat[index] = updatedMessage;
-                    return { ...prev, [activeChat]: newChat };
-                });
-
-                // Save translation back to store
-                fetch("/api/messages", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        user1: "nasywa",
-                        user2: activeChat,
-                        message: updatedMessage
-                    })
-                }).catch(() => { });
-
-                // Word breakdown logic
-                if (data.wordBreakdown && Array.isArray(data.wordBreakdown)) {
-                    setLearnedWords((prev) => {
-                        const newWords = data.wordBreakdown.filter((newWord: any) =>
-                            !prev.some((w) => (w.word || "").toLowerCase() === (newWord.word || "").toLowerCase())
-                        );
-                        if (newWords.length === 0) return prev;
-                        return [...prev, ...newWords];
-                    });
-                }
-            } catch (error) {
-                console.error("Background translation failed:", error);
-            }
-        })();
-    };
-
-    const chatPartners = [
-        { id: "sajid", name: "Sajid", color: "from-blue-500 to-indigo-500" },
-        { id: "admin", name: "Admin", color: "from-purple-500 to-indigo-500" }
-    ];
 
     return (
         <div className="flex h-[100dvh] bg-background overflow-hidden relative">
