@@ -1684,7 +1684,6 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                                     }
                                 }}
                             />
-                            <NotificationManager userId="sajid" />
                         </div>
                     </div>
 

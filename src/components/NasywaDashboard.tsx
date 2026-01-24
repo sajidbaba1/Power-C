@@ -1549,30 +1549,6 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                                 <Video className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="ml-1 sm:ml-3">
-                            <NotificationBell
-                                userRole="nasywa"
-                                pusherClient={pusher}
-                                onNotificationClick={(n) => {
-                                    switch (n.type) {
-                                        case "activity":
-                                        case "reaction":
-                                        case "comment":
-                                            setShowActivities(true);
-                                            break;
-                                        case "lovenote":
-                                            setShowLoveWall(true);
-                                            break;
-                                        case "milestone":
-                                            setShowMilestones(true);
-                                            break;
-                                        case "jar":
-                                            setShowJar(true);
-                                            break;
-                                    }
-                                }}
-                            />
-                        </div>
                     </div>
 
                     <div className="flex-1 flex justify-center px-4 overflow-hidden">
