@@ -235,14 +235,25 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
         if (peerConnectionRef.current) {
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+
+            while (iceCandidateQueue.current.length > 0) {
+                const candidate = iceCandidateQueue.current.shift();
+                if (candidate) {
+                    await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                }
+            }
         }
     };
 
     const handleCandidate = async (candidate: RTCIceCandidateInit) => {
-        if (peerConnectionRef.current) {
-            await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+        const pc = peerConnectionRef.current;
+        if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+                console.error("Error adding ice candidate", e);
+            }
         } else {
-            // Queue candidate until PC is ready
             iceCandidateQueue.current.push(candidate);
         }
     };
