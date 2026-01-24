@@ -29,6 +29,7 @@ import ChatInput from './ChatInput';
 import { generateWordsPDF } from "@/lib/pdfGenerator";
 import NotificationManager from './NotificationManager';
 import { Download } from "lucide-react";
+import { useWebRTC } from "@/hooks/useWebRTC";
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -108,176 +109,16 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
-    const [callConfig, setCallConfig] = useState<{
-        isOpen: boolean;
-        type: 'audio' | 'video';
-        role: 'caller' | 'receiver';
-        partnerName: string;
-        partnerAvatar?: string;
-    }>({
-        isOpen: false,
-        type: 'audio',
-        role: 'caller',
-        partnerName: 'Nasywa'
-    });
-    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-    const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-
-    const sendSignal = useCallback(async (type: string, data: any) => {
-        await fetch("/api/chat/signal", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                sender: "sajid",
-                receiver: "nasywa",
-                type,
-                data
-            })
-        });
-    }, []);
-
-    const createPeerConnection = useCallback((type: 'audio' | 'video') => {
-        const pc = new RTCPeerConnection({
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        });
-
-        pc.onicecandidate = (event) => {
-            if (event.candidate) {
-                sendSignal('candidate', event.candidate);
-            }
-        };
-
-        pc.ontrack = (event) => {
-            setRemoteStream(event.streams[0]);
-        };
-
-        peerConnectionRef.current = pc;
-        return pc;
-    }, [sendSignal]);
-
-    const initiateCall = async (type: 'audio' | 'video') => {
-        setCallConfig({
-            isOpen: true,
-            type,
-            role: 'caller',
-            partnerName: profiles.nasywa?.name || 'Nasywa',
-            partnerAvatar: profiles.nasywa?.avatarUrl
-        });
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: type === 'video'
-            });
-            setLocalStream(stream);
-
-            const pc = createPeerConnection(type);
-            stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-
-            await sendSignal('call-invite', { type });
-            await sendSignal('offer', offer);
-        } catch (err) {
-            console.error("Call initiation failed:", err);
-            alert("Could not access camera/microphone");
-            setCallConfig(prev => ({ ...prev, isOpen: false }));
-        }
-    };
-
-    const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([]);
-
-    const handleAcceptCall = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: callConfig.type === 'video'
-            });
-            setLocalStream(stream);
-
-            const pc = createPeerConnection(callConfig.type);
-            stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-            const offer = (window as any).pendingOffer;
-            if (offer) {
-                await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                sendSignal('answer', answer);
-                (window as any).pendingOffer = null;
-
-                // Flush buffered candidates
-                while (iceCandidateQueue.current.length > 0) {
-                    const candidate = iceCandidateQueue.current.shift();
-                    if (candidate) {
-                        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-                    }
-                }
-            }
-        } catch (err) {
-            console.error("Failed to accept call:", err);
-            handleHangup();
-        }
-    };
-
-    const handleOffer = async (offer: RTCSessionDescriptionInit) => {
-        (window as any).pendingOffer = offer;
-        // If we are already in a call (re-negotiation), apply immediately
-        if (peerConnectionRef.current) {
-            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await peerConnectionRef.current.createAnswer();
-            await peerConnectionRef.current.setLocalDescription(answer);
-            sendSignal('answer', answer);
-        }
-    };
-
-    const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
-        if (peerConnectionRef.current) {
-            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-
-            while (iceCandidateQueue.current.length > 0) {
-                const candidate = iceCandidateQueue.current.shift();
-                if (candidate) {
-                    await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-                }
-            }
-        }
-    };
-
-    const handleCandidate = async (candidate: RTCIceCandidateInit) => {
-        const pc = peerConnectionRef.current;
-        if (pc && pc.remoteDescription && pc.remoteDescription.type) {
-            try {
-                await pc.addIceCandidate(new RTCIceCandidate(candidate));
-            } catch (e) {
-                console.error("Error adding ice candidate", e);
-            }
-        } else {
-            iceCandidateQueue.current.push(candidate);
-        }
-    };
-
-    const handleDeclineCall = () => {
-        sendSignal('call-decline', {});
-        setCallConfig(prev => ({ ...prev, isOpen: false }));
-    };
-
-    const handleHangup = useCallback((shouldSignal = true) => {
-        if (shouldSignal) sendSignal('hangup', {});
-
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            setLocalStream(null);
-        }
-        setRemoteStream(null);
-        if (peerConnectionRef.current) {
-            peerConnectionRef.current.close();
-            peerConnectionRef.current = null;
-        }
-        setCallConfig(prev => ({ ...prev, isOpen: false }));
-    }, [localStream, sendSignal]);
+    const {
+        callConfig,
+        setCallConfig, // exposed if needed for manual overrides
+        localStream,
+        remoteStream,
+        initiateCall,
+        handleAcceptCall,
+        handleDeclineCall,
+        handleHangup
+    } = useWebRTC("sajid", activeChat);
 
     const startRecording = async () => {
         try {
@@ -826,34 +667,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
             setProfiles(prev => ({ ...prev, [data.role]: data.profile }));
         });
 
-        channel.bind("call-signal", async (signal: any) => {
-            if (signal.sender === "sajid") return;
 
-            switch (signal.type) {
-                case 'call-invite':
-                    setCallConfig({
-                        isOpen: true,
-                        type: signal.data.type,
-                        role: 'receiver',
-                        partnerName: profiles[signal.sender]?.name || signal.sender,
-                        partnerAvatar: profiles[signal.sender]?.avatarUrl
-                    });
-                    break;
-                case 'call-decline':
-                case 'hangup':
-                    handleHangup(false);
-                    break;
-                case 'offer':
-                    handleOffer(signal.data);
-                    break;
-                case 'answer':
-                    handleAnswer(signal.data);
-                    break;
-                case 'candidate':
-                    handleCandidate(signal.data);
-                    break;
-            }
-        });
 
         channel.bind("hug", () => {
             setCurrentHug(true);
