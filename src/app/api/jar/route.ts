@@ -37,6 +37,12 @@ export async function POST(req: Request) {
             createdAt: new Date().toISOString()
         });
 
+        // Push Notification
+        const targetRole = author === "sajid" ? "nasywa" : "sajid";
+        await import("@/lib/notifications").then(m =>
+            m.sendPushNotification(targetRole, "New Jar Memory", `${partnerName} added a memory to the jar!`)
+        );
+
         return NextResponse.json(note);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

@@ -44,6 +44,12 @@ export async function POST(req: Request) {
             createdAt: new Date().toISOString()
         });
 
+        // Push Notification
+        const targetRole = sender === "sajid" ? "nasywa" : "sajid";
+        await import("@/lib/notifications").then(m =>
+            m.sendPushNotification(targetRole, "New Love Note", `${partnerName} posted a note on the wall!`)
+        );
+
         return NextResponse.json(note);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

@@ -17,7 +17,9 @@ import NotificationBell from './NotificationBell';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 import CallOverlay from './CallOverlay';
+import { generateWordsPDF } from "@/lib/pdfGenerator";
 import NotificationManager from './NotificationManager';
+import { Download } from "lucide-react";
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -175,6 +177,8 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
         }
     };
 
+    const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([]);
+
     const handleAcceptCall = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -193,6 +197,14 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                 await pc.setLocalDescription(answer);
                 sendSignal('answer', answer);
                 (window as any).pendingOffer = null;
+
+                // Flush buffered candidates
+                while (iceCandidateQueue.current.length > 0) {
+                    const candidate = iceCandidateQueue.current.shift();
+                    if (candidate) {
+                        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
+                }
             }
         } catch (err) {
             console.error("Failed to accept call:", err);
@@ -202,6 +214,7 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
 
     const handleOffer = async (offer: RTCSessionDescriptionInit) => {
         (window as any).pendingOffer = offer;
+        // If we are already in a call (re-negotiation), apply immediately
         if (peerConnectionRef.current) {
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await peerConnectionRef.current.createAnswer();
@@ -219,6 +232,9 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
     const handleCandidate = async (candidate: RTCIceCandidateInit) => {
         if (peerConnectionRef.current) {
             await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+        } else {
+            // Queue candidate until PC is ready
+            iceCandidateQueue.current.push(candidate);
         }
     };
 
@@ -1874,6 +1890,13 @@ export default function SajidDashboard({ user, onLogout }: SajidDashboardProps) 
                             <p className="text-xs text-muted-foreground">{learnedWords.length} words collected</p>
                         </div>
                         <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => generateWordsPDF(learnedWords, "Sajid", "Indonesian")}
+                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                title="Download PDF"
+                            >
+                                <Download className="w-4 h-4" />
+                            </button>
                             <button
                                 onClick={() => setShowEmailSettings(!showEmailSettings)}
                                 className="p-2 hover:bg-muted rounded-lg transition-colors"

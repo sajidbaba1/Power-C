@@ -129,25 +129,25 @@ export default function ChatInput({
                 )}
             </AnimatePresence>
 
-            {/* Main Input Container - Better safe area and padding */}
-            <div className="px-2 pb-safe pt-2 lg:p-6 bg-card/50 backdrop-blur-xl border-t border-white/5 relative z-20 w-full max-w-[100vw] overflow-hidden">
-                {/* Replying To Preview - Integrated better */}
+            {/* Main Input Container */}
+            <div className="px-2 pb-safe pt-2 lg:p-6 bg-card/50 backdrop-blur-xl border-t border-white/5 relative z-20 w-full max-w-[100vw]">
+                {/* Replying To Preview - Static block so it's always visible */}
                 <AnimatePresence>
                     {replyingTo && (
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="absolute bottom-full left-2 right-2 lg:left-6 lg:right-6 mb-3 p-3 bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-between gap-3 shadow-2xl z-30"
+                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            animate={{ opacity: 1, height: "auto", marginBottom: 12 }}
+                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            className="bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-between gap-3 shadow-2xl mx-1 overflow-hidden"
                         >
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 p-3">
                                 <div className="flex items-center gap-2 mb-1">
                                     <div className="w-1 h-3 bg-primary rounded-full" />
                                     <p className="text-[10px] uppercase font-black tracking-widest text-primary">Replying to</p>
                                 </div>
                                 <p className="text-xs font-medium truncate opacity-70 italic pl-3">"{replyingTo.text}"</p>
                             </div>
-                            <button onClick={onCancelReply} className="p-1.5 hover:bg-white/10 rounded-xl transition-colors shrink-0">
+                            <button onClick={onCancelReply} className="p-3 hover:bg-white/10 transition-colors shrink-0 h-full border-l border-white/5">
                                 <X className="w-4 h-4 text-muted-foreground" />
                             </button>
                         </motion.div>
@@ -278,7 +278,7 @@ export default function ChatInput({
                             placeholder={replyingTo ? "Write a reply..." : `Message ${activeChat}...`}
                             className="flex-1 bg-transparent border-none outline-none text-[18px] lg:text-[20px] px-1 lg:px-4 min-w-0 resize-none overflow-y-auto leading-relaxed py-2 custom-scrollbar"
                             rows={1}
-                            style={{ minHeight: '40px', maxHeight: '150px' }}
+                            style={{ minHeight: '40px', maxHeight: '80px' }}
                         />
 
                         <button

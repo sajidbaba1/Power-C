@@ -41,6 +41,12 @@ export async function POST(req: Request) {
                 sender: sender,
                 createdAt: new Date().toISOString()
             });
+
+            // Push Notification
+            const targetRole = sender === "sajid" ? "nasywa" : "sajid";
+            await import("@/lib/notifications").then(m =>
+                m.sendPushNotification(targetRole, "New Milestone", `${partnerName} added a new milestone: ${title}`)
+            );
         }
 
         return NextResponse.json(milestone);

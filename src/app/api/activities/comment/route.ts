@@ -24,6 +24,14 @@ export async function POST(req: Request) {
         if (activity) {
             const channelName = `activities-${activity.date}`;
             await pusherServer.trigger(channelName, "update-activity", activity);
+
+            // Notify owner if comment is from partner
+            if (activity.sender !== user) {
+                const partnerName = user === "sajid" ? "Sajid" : "Nasywa";
+                await import("@/lib/notifications").then(m =>
+                    m.sendPushNotification(activity.sender, "New Comment", `${partnerName} commented: ${text}`)
+                );
+            }
         }
 
         return NextResponse.json(comment);

@@ -175,6 +175,8 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
         }
     };
 
+    const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([]);
+
     const handleAcceptCall = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -193,6 +195,14 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
                 await pc.setLocalDescription(answer);
                 sendSignal('answer', answer);
                 (window as any).pendingOffer = null;
+
+                // Flush buffered candidates
+                while (iceCandidateQueue.current.length > 0) {
+                    const candidate = iceCandidateQueue.current.shift();
+                    if (candidate) {
+                        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
+                }
             }
         } catch (err) {
             console.error("Failed to accept call:", err);
@@ -202,6 +212,7 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
 
     const handleOffer = async (offer: RTCSessionDescriptionInit) => {
         (window as any).pendingOffer = offer;
+        // If we are already in a call (re-negotiation), apply immediately
         if (peerConnectionRef.current) {
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await peerConnectionRef.current.createAnswer();
@@ -219,6 +230,9 @@ export default function NasywaDashboard({ user, onLogout }: NasywaDashboardProps
     const handleCandidate = async (candidate: RTCIceCandidateInit) => {
         if (peerConnectionRef.current) {
             await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+        } else {
+            // Queue candidate until PC is ready
+            iceCandidateQueue.current.push(candidate);
         }
     };
 

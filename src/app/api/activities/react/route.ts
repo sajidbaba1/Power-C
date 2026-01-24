@@ -37,6 +37,14 @@ export async function POST(req: Request) {
         const channelName = `activities-${activity.date}`;
         await pusherServer.trigger(channelName, "update-activity", updated);
 
+        // Notify if it's a new reaction from partner
+        if (existingIndex === -1 && activity.sender !== user) {
+            const partnerName = user === "sajid" ? "Sajid" : "Nasywa";
+            await import("@/lib/notifications").then(m =>
+                m.sendPushNotification(activity.sender, "New Reaction", `${partnerName} reacted ${emoji} to your pulse`)
+            );
+        }
+
         return NextResponse.json(updated);
     } catch (e: any) {
         console.error("React Error:", e);
